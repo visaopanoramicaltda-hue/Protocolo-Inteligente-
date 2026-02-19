@@ -1,0 +1,266 @@
+
+<!-- INITIALIZATION LAYER -->
+@if (initStatus() === 'loading') {
+  <div class="h-screen w-full bg-[#050505] flex flex-col items-center justify-center p-6 text-center font-serif relative overflow-hidden">
+      <!-- Background Effect -->
+      <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-20 pointer-events-none static-texture gpu-layer"></div>
+      
+      <h2 class="text-[#E86C26] text-2xl md:text-3xl font-black uppercase tracking-widest mb-8 animate-pulse z-10" 
+          style="text-shadow: 0 0 20px rgba(232, 108, 38, 0.5);">
+          SIMBIOSE: CARREGANDO...
+      </h2>
+      <div class="w-16 h-16 border-4 border-[#2a2320] border-t-[#E86C26] rounded-full animate-spin z-10"></div>
+  </div>
+} @else if (initStatus() === 'error') {
+  <div class="h-screen w-full bg-[#050505] flex flex-col items-center justify-center p-6 text-center font-serif relative">
+      <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-20 pointer-events-none static-texture gpu-layer"></div>
+
+      <div class="bg-[#EAE0D5] border-4 border-[#E86C26] p-10 max-w-[400px] w-full text-center relative z-10 shadow-2xl rounded-sm transform rotate-1">
+          <h2 class="text-2xl font-black uppercase tracking-widest mb-6 border-b-2 border-[#2a2320] pb-4">
+              SISTEMA TRAVADO
+          </h2>
+          
+          <div class="bg-[#F2EBE5] border border-[#2a2320] p-4 mb-6 text-left text-xs text-[#2a2320] font-mono">
+              <p class="mb-2">Falha de Roteamento no Sandbox Google.</p>
+              <p><strong>Ação:</strong> Remova o código final da URL manualmente.</p>
+              <p class="mt-2 text-[10px] opacity-70">{{ initMessage() }}</p>
+          </div>
+
+          <button (click)="resetRoot()" 
+                  class="w-full py-4 bg-[#2a2320] text-[#EAE0D5] font-bold uppercase cursor-pointer transition-all hover:bg-[#E86C26] hover:text-white shadow-lg">
+              RESTAURAR PROTOCOLO
+          </button>
+          
+          <div class="mt-4">
+             <button (click)="retryInit()" class="text-xs text-[#2a2320] underline hover:text-[#E86C26]">Tentar reconectar sem reset</button>
+          </div>
+      </div>
+  </div>
+} @else {
+  <!-- MAIN APP CONTENT - DESK ENVIRONMENT -->
+  <div class="min-h-screen flex flex-col relative animate-[fadeIn_0.5s_ease-out] bg-[#050505]">
+    
+    <!-- Desk Texture (GPU OPTIMIZED) -->
+    <div class="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-30 pointer-events-none z-0 mix-blend-overlay static-texture gpu-layer"></div>
+    <div class="fixed inset-0 bg-gradient-to-b from-black via-transparent to-black opacity-80 pointer-events-none z-0 gpu-layer"></div>
+
+    <!-- TOAST NOTIFICATIONS (SWIPE ENABLED) -->
+    <div class="fixed top-4 right-4 z-[99999] flex flex-col gap-2 pointer-events-none safe-area-pt">
+      @for (toast of ui.toasts(); track toast.id) {
+        <div (click)="ui.remove(toast.id)"
+             (touchstart)="onToastTouchStart($event, toast.id)"
+             (touchmove)="onToastTouchMove($event)"
+             (touchend)="onToastTouchEnd()"
+             class="pointer-events-auto cursor-pointer transform transition-transform duration-100 min-w-[300px] max-w-sm rounded-sm shadow-[5px_5px_15px_rgba(0,0,0,0.5)] overflow-hidden border-l-8 font-serif touch-pan-y gpu-layer"
+             [style.transform]="activeToastSwipe()?.id === toast.id ? 'translateX(' + activeToastSwipe()!.currentOffset + 'px)' : 'translateX(0)'"
+             [style.opacity]="getToastOpacity(toast.id)"
+             [class.bg-[#EAE0D5]]="true"
+             [class.border-green-600]="toast.type === 'SUCCESS'"
+             [class.border-red-600]="toast.type === 'ERROR'"
+             [class.border-blue-600]="toast.type === 'INFO'"
+             [class.border-yellow-600]="toast.type === 'WARNING'">
+           <div class="p-4 flex items-start gap-3 border border-[#2a2320]">
+             <div class="flex-1"><p class="text-sm font-bold text-[#2a2320]">{{ toast.message }}</p></div>
+           </div>
+        </div>
+      }
+    </div>
+
+    <!-- OFFLINE INDICATOR -->
+    @if (!ui.isOnline()) {
+      <div class="fixed top-0 left-0 right-0 bg-[#E86C26] text-[#2a2320] text-[10px] md:text-xs py-1 px-4 text-center z-[100] font-black uppercase tracking-widest flex justify-center items-center gap-2 shadow-lg border-b border-[#2a2320] safe-area-pt">
+        ⚠️ MODO OFFLINE ATIVO - DADOS LOCAIS
+      </div>
+    }
+
+    <!-- HEADER: BLACKOUT PIANO BLACK + BROWN GRADIENT BORDER -->
+    @if (isHeaderVisible()) {
+      <header class="relative z-40 w-full shadow-2xl safe-area-pt gpu-layer transition-all duration-300">
+        
+        <!-- 1. Fundo Blackout Vidro -->
+        <div class="absolute inset-0 bg-[#050505]/95 backdrop-blur-xl z-0"></div>
+        
+        <!-- 2. Borda Gradiente Marrom (Estilo Agenda Premium) -->
+        <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#2a2320] via-[#8a6a5c] to-[#2a2320] z-20 opacity-80 shadow-[0_0_10px_#8a6a5c]"></div>
+
+        <div class="relative z-10 px-4 py-3 flex justify-between items-center">
+            
+            <!-- LEFT: BRANDING & STATUS -->
+            <div class="flex items-center gap-4">
+                <!-- BRAND -->
+                <div class="flex flex-col leading-none select-none cursor-default group">
+                    <div class="flex items-center gap-1">
+                        <span class="text-[#E86C26] font-black uppercase text-sm tracking-[0.2em] group-hover:tracking-[0.25em] transition-all duration-500 text-shadow-sm">Simbiose</span>
+                        <div class="w-1.5 h-1.5 bg-[#E86C26] rounded-full animate-pulse shadow-[0_0_5px_#E86C26]"></div>
+                    </div>
+                    <span class="text-[#8a6a5c] font-bold uppercase text-[8px] tracking-widest pl-0.5">OS V9.9</span>
+                </div>
+
+                <!-- VERTICAL DIVIDER -->
+                <div class="h-6 w-px bg-white/10 hidden md:block"></div>
+
+                <!-- INFO: PLANO & USO (AGORA VISÍVEL SEMPRE) -->
+                <div class="flex items-center gap-3 md:gap-6">
+                     
+                     <!-- PLANO ATIVO -->
+                     <div class="flex flex-col">
+                        <span class="text-[7px] md:text-[8px] text-gray-500 font-bold uppercase tracking-wider hidden md:block">Plano</span>
+                        <span class="text-[10px] md:text-xs font-black uppercase tracking-widest"
+                              [class.text-white]="auth.activePlan() === 'START'"
+                              [class.text-[#E86C26]]="auth.activePlan() === 'START' || auth.activePlan() === 'PRO'"
+                              [class.text-blue-400]="auth.activePlan() === 'BASICO'"
+                              [class.text-purple-400]="auth.activePlan() === 'ENTERPRISE'"
+                              [class.text-yellow-500]="auth.activePlan() === 'PRO_INFINITY' || auth.activePlan() === 'DEV_SUPREMO'">
+                            {{ auth.activePlan() === 'PRO_INFINITY' ? 'PRO ∞' : auth.activePlan() }}
+                        </span>
+                     </div>
+
+                     <!-- CONTADOR DE ETIQUETAS -->
+                     <div class="flex flex-col border-l border-white/10 pl-3 md:pl-4">
+                        <span class="text-[7px] md:text-[8px] text-gray-500 font-bold uppercase tracking-wider hidden md:block">Lidas</span>
+                        <div class="flex items-end gap-1">
+                            <span class="text-[10px] md:text-xs font-mono font-bold text-white">{{ auth.usageCount() }}</span>
+                            <span class="text-[8px] text-gray-600 font-bold mb-0.5">/</span>
+                            <span class="text-[9px] text-gray-500 font-bold mb-0.5">
+                                {{ auth.getPlanLimit() > 999999 ? '∞' : auth.getPlanLimit() }}
+                            </span>
+                        </div>
+                     </div>
+                </div>
+            </div>
+            
+            <!-- RIGHT: USER ACTIONS -->
+            <div class="flex items-center gap-3">
+                <!-- USER PROFILE & LOGOUT -->
+                <div class="flex items-center gap-2 md:gap-3 md:pl-4 md:border-l md:border-white/10">
+                    <div class="text-right">
+                        <!-- Label "Operador" -->
+                        <p class="text-[8px] text-gray-500 uppercase font-bold tracking-wider hidden md:block">Operador</p>
+                        <!-- Nome Dourado visível -->
+                        <p class="text-[10px] md:text-xs font-bold text-[#d4af37] uppercase tracking-wide">
+                            Olá, {{ (auth.currentUser()?.nome?.split(' ')?.[0]) || 'Admin' }}
+                        </p>
+                    </div>
+                    
+                    <button (click)="requestLogout()" class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-[#E86C26] hover:bg-white/10 hover:border-[#E86C26]/50 transition-all active:scale-95 group shadow-sm" title="Sair do Sistema">
+                        <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+      </header>
+    }
+
+    <!-- MAIN CONTENT (Desk Area) - White flash fixed by removing paper BG from here -->
+    @if (db.initialized()) {
+      <main class="flex-grow w-full h-full relative transition-all duration-300 animate-[fadeIn_0.5s] z-10 overflow-hidden flex flex-col">
+          <!-- The container for router-outlet. Child components now provide their own "paper" background. -->
+          <div class="flex-1 relative overflow-hidden flex flex-col w-full h-full">
+              
+              <!-- Content Router Area -->
+              <div class="relative z-10 flex-1 flex flex-col overflow-hidden">
+                  <!-- Simbiose Prediction Background Loader (Non-blocking) -->
+                  @if (isRouteLoading()) {
+                      <div class="absolute top-0 left-0 right-0 h-1 bg-[#E86C26]/20 z-50 overflow-hidden pointer-events-none">
+                          <div class="h-full bg-[#E86C26] animate-[width_1s_infinite]"></div>
+                      </div>
+                  }
+                  
+                  <!-- Router Outlet Container (Always Visible for Background Loading Feel) -->
+                  <div class="flex-1 flex flex-col overflow-hidden">
+                      <router-outlet></router-outlet>
+                  </div>
+              </div>
+          </div>
+      </main>
+    }
+    
+    <!-- UPDATE NOTIFICATION BANNER -->
+    @if (updateAvailable()) {
+      <div class="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[99999] bg-[#EAE0D5] border-4 border-[#E86C26] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex flex-col gap-3 max-w-xs animate-[slideIn_0.3s] rotate-1 cursor-pointer gpu-layer" (click)="reloadApp()">
+          <div class="flex items-start gap-3">
+              <div class="bg-[#E86C26] text-white w-10 h-10 flex items-center justify-center font-black text-xl border-2 border-[#2a2320] shadow-sm">
+                  ⚡
+              </div>
+              <div>
+                  <h4 class="font-black text-[#2a2320] uppercase text-sm leading-tight">Atualização Disponível</h4>
+                  <p class="text-[10px] text-[#5c4d46] font-bold leading-tight mt-1">Nova versão do sistema pronta.</p>
+              </div>
+          </div>
+          <button (click)="reloadApp()" class="w-full py-3 bg-[#2a2320] text-[#EAE0D5] font-black uppercase text-xs tracking-widest hover:bg-[#E86C26] transition-colors shadow-md border-2 border-transparent hover:border-[#2a2320]">
+              ATUALIZAR AGORA
+          </button>
+      </div>
+    }
+    
+    <!-- PWA INSTALL PROMPT (ELEGANT DESIGN) -->
+    @if (ui.showInstallPrompt()) {
+      <div class="fixed bottom-0 left-0 right-0 z-[99999] bg-black/95 backdrop-blur-xl border-t-2 border-[#d4af37] p-4 md:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] animate-[slideIn_0.3s] gpu-layer">
+          <div class="max-w-xl mx-auto flex items-center justify-between gap-4">
+              <div class="flex items-center gap-4">
+                  <div class="bg-[#1a0b06] border border-[#d4af37]/30 w-12 h-12 rounded-lg flex items-center justify-center shadow-lg">
+                      <img [src]="ui.APP_LOGO" class="w-8 h-8 opacity-90">
+                  </div>
+                  <div>
+                      <h4 class="text-[#d4af37] font-black uppercase text-xs tracking-widest mb-1">Instalar Aplicativo</h4>
+                      <p class="text-white/60 text-[10px] md:text-xs">Adicione o Simbiose à sua tela inicial para acesso offline rápido.</p>
+                  </div>
+              </div>
+              <div class="flex items-center gap-2">
+                  <button (click)="dismissPwaInstall()" class="px-4 py-2 text-white/40 font-bold uppercase text-[10px] hover:text-white transition-colors">Agora não</button>
+                  <button (click)="installPwaApp()" class="px-5 py-2 bg-[#d4af37] text-black font-black uppercase text-[10px] tracking-widest rounded-sm hover:bg-white transition-colors shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+                      INSTALAR
+                  </button>
+              </div>
+          </div>
+      </div>
+    }
+    
+    <!-- GLOBAL FULLSCREEN IMAGE VIEWER (ECOSYSTEM WIDE) -->
+    @if (ui.isImageViewerOpen() && ui.currentFullscreenImage()) {
+      <div class="fixed inset-0 z-[100000] bg-black/95 flex items-center justify-center p-4 animate-[fadeIn_0.2s] gpu-layer" (click)="ui.closeImage()">
+          <!-- Toolbar -->
+          <button (click)="ui.closeImage()" class="absolute top-4 right-4 z-[100100] w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all">
+              <span class="text-2xl font-bold">✕</span>
+          </button>
+
+          <!-- Image -->
+          <img [src]="'data:image/jpeg;base64,' + ui.currentFullscreenImage()" 
+               class="max-w-full max-h-[90vh] object-contain shadow-2xl rounded-sm border border-white/10 select-none"
+               (click)="$event.stopPropagation()">
+
+          <!-- Caption/Footer -->
+          <div class="absolute bottom-10 left-0 right-0 text-center pointer-events-none">
+              <span class="inline-block bg-black/50 text-white px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-md border border-white/10 shadow-lg">
+                  Visualização de Evidência (HD)
+              </span>
+          </div>
+      </div>
+    }
+    
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    @if (showLogoutConfirmation()) {
+        <div class="fixed inset-0 z-[10000] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm animate-[fadeIn_0.2s] gpu-layer">
+            <div class="bg-[#EAE0D5] border-4 border-[#2a2320] w-full max-w-sm shadow-2xl relative font-serif p-6 text-center rounded-sm">
+                <h3 class="text-xl font-black text-[#2a2320] uppercase mb-2">Encerrar Sessão?</h3>
+                <p class="text-xs text-[#5c4d46] mb-6 font-bold uppercase tracking-wide">Você precisará digitar sua senha novamente para entrar.</p>
+                
+                <div class="flex gap-3">
+                    <button (click)="cancelLogout()" class="flex-1 py-3 border-2 border-[#2a2320] text-[#2a2320] font-bold uppercase text-xs hover:bg-white transition-colors">
+                        Cancelar
+                    </button>
+                    <button (click)="confirmLogout()" class="flex-1 py-3 bg-[#E86C26] text-white font-black uppercase text-xs shadow-md hover:bg-[#d55b1b] transition-colors border-2 border-[#2a2320]">
+                        Sair Agora
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+  </div>
+}
+
+<style>
+@keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes width { 0% { width: 0; margin-left: 0; } 50% { width: 100%; margin-left: 0; } 100% { width: 0; margin-left: 100%; } }
+</style>
