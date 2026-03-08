@@ -76,9 +76,10 @@ Após preencher cada linha, toque no botão verde **"Adicionar segredo"**.
 
 Após cadastrar os 4 secrets:
 1. Vá na aba **"Actions"** do repositório
-2. Clique em **"Deploy to Firebase Hosting"**
-3. Clique em **"Run workflow"** → **"Run workflow"**
-4. Aguarde o ✅ verde e acesse: `https://SEU-PROJETO-ID.web.app`
+2. Clique em **"Deploy to Firebase Hosting"** no menu lateral
+3. Clique no botão **"Run workflow"** → **"Run workflow"** (botão verde)
+4. Aguarde o ✅ verde — o link aparecerá nos logs: `https://SEU-PROJETO-ID.web.app`
+   _(substitua `SEU-PROJETO-ID` pelo ID do secret `FIREBASE_PROJECT_ID`)_
 
 ---
 

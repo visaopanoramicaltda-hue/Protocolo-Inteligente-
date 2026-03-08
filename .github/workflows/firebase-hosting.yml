@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch:
 
 jobs:
   build_and_deploy:
@@ -77,8 +78,8 @@ jobs:
           projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
           channelId: pr-${{ github.event.number }}
 
-      - name: Deploy to Firebase Hosting (live channel on push)
-        if: github.event_name == 'push'
+      - name: Deploy to Firebase Hosting (live channel on push or manual)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

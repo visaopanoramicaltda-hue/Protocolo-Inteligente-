@@ -227,20 +227,15 @@ MERCADO_PAGO_TOKEN         ✅
 
 ## 🚀 Passo 7 — Disparar o deploy
 
-O deploy acontece **automaticamente** sempre que você faz um push para a branch `main`.
+Após cadastrar os 4 secrets, **dispare o deploy manualmente** assim:
 
-**Para disparar agora:**
+1. No repositório, clique na aba **"Actions"** (menu horizontal superior)
+2. No menu lateral esquerdo, clique em **"Deploy to Firebase Hosting"**
+3. À direita, clique no botão **"Run workflow"**
+4. No popup que abrir, clique novamente em **"Run workflow"** (botão verde)
+5. Você verá um círculo amarelo ⏳ — clique nele para acompanhar em tempo real
 
-1. Acesse o repositório no GitHub
-2. Clique na aba **"Actions"** (menu horizontal superior)
-3. No menu lateral esquerdo, clique em **"Deploy to Firebase Hosting"**
-4. Clique no botão **"Run workflow"** → **"Run workflow"** novamente
-
-   _Ou, se você tem o repositório no computador:_
-   ```bash
-   git commit --allow-empty -m "trigger deploy"
-   git push origin main
-   ```
+> ✅ O deploy também roda **automaticamente** toda vez que um código for enviado para a branch `main`.
 
 ---
 
@@ -249,13 +244,15 @@ O deploy acontece **automaticamente** sempre que você faz um push para a branch
 1. Na aba **"Actions"** do GitHub, você verá um item novo com um círculo amarelo ⏳
 2. Clique nele para ver o progresso em tempo real
 3. Quando ficar verde ✅, o deploy foi feito com sucesso!
-4. Acesse seu app em:
+4. O link do seu aplicativo será exibido nos logs do deploy e também fica disponível em:
 
 ```
 https://SEU-PROJETO-ID.web.app
 ```
 
-_(substitua `SEU-PROJETO-ID` pelo ID que você anotou no Passo 3)_
+_(substitua `SEU-PROJETO-ID` pelo ID que você anotou no Passo 3 — é o mesmo valor do secret `FIREBASE_PROJECT_ID`)_
+
+> 💡 **Dica:** O link exato também aparece no log do GitHub Actions — clique no job **"Build & Deploy"** → procure por `Hosting URL: https://...`
 
 ---
 
