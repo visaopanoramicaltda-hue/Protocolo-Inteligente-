@@ -1,6 +1,6 @@
 
 import { Component, inject, signal, computed, ViewChild, ElementRef, AfterViewInit, OnDestroy, effect, ChangeDetectionStrategy, ChangeDetectorRef, NgZone } from '@angular/core';
-import { CommonModule, DatePipe, PercentPipe, DecimalPipe } from '@angular/common';
+import { CommonModule, PercentPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DbService, Encomenda, Morador } from '../../services/db.service';
@@ -14,7 +14,7 @@ import { ExclusiveScannerService } from '../../services/exclusive-scanner.servic
 @Component({
   selector: 'app-package-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, PercentPipe, DecimalPipe],
+  imports: [CommonModule, FormsModule, PercentPipe, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './package-form.component.html'
 })
