@@ -25,13 +25,47 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: 'package.json'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Inject production secrets
+        env:
+          MERCADO_PAGO_TOKEN: ${{ secrets.MERCADO_PAGO_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python3 - << 'PYEOF'
+          import json, os, sys
+          path = 'src/environments/environment.prod.ts'
+          try:
+              content = open(path).read()
+          except OSError as e:
+              print(f'::error::Não foi possível ler {path}: {e}', file=sys.stderr)
+              sys.exit(1)
+          token  = os.environ.get('MERCADO_PAGO_TOKEN', '')
+          gemini = os.environ.get('GEMINI_API_KEY', '')
+          if token:
+              replaced = content.replace("mercadoPagoAccessToken: ''", "mercadoPagoAccessToken: " + json.dumps(token))
+              if replaced == content:
+                  print("::warning::MERCADO_PAGO_TOKEN não foi injetado — placeholder 'mercadoPagoAccessToken: \\\"\\\"' não encontrado em environment.prod.ts", file=sys.stderr)
+              content = replaced
+          if gemini:
+              replaced = content.replace("geminiApiKey: ''", "geminiApiKey: " + json.dumps(gemini))
+              if replaced == content:
+                  print("::warning::GEMINI_API_KEY não foi injetado — placeholder 'geminiApiKey: \\\"\\\"' não encontrado em environment.prod.ts", file=sys.stderr)
+              content = replaced
+          try:
+              open(path, 'w').write(content)
+          except OSError as e:
+              print(f'::error::Não foi possível escrever em {path}: {e}', file=sys.stderr)
+              sys.exit(1)
+          PYEOF
 
       - name: Build for production
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
         run: npm run build
 
       - name: Deploy to Firebase Hosting (preview channel on PRs)

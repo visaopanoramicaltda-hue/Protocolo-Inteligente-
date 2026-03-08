@@ -60,9 +60,14 @@ O app ficará disponível em: `https://<seu-projeto>.web.app`
 
 > 💡 **Deploy automático via GitHub Actions:** o workflow `.github/workflows/firebase-hosting.yml`
 > faz o deploy automaticamente a cada `push` na branch `main`/`master`.
-> Configure os seguintes **GitHub Secrets** no repositório:
-> - `FIREBASE_SERVICE_ACCOUNT` — JSON da conta de serviço Firebase (gerado em: Firebase Console → Configurações do projeto → Contas de serviço)
-> - `FIREBASE_PROJECT_ID` — ID do projeto Firebase (ex: `meu-app-12345`)
+> Configure os seguintes **GitHub Secrets** no repositório (Settings → Secrets and variables → Actions):
+>
+> | Secret | Obrigatório | Como obter |
+> |---|---|---|
+> | `FIREBASE_SERVICE_ACCOUNT` | ✅ | Firebase Console → Configurações do projeto → Contas de serviço → Gerar nova chave privada |
+> | `FIREBASE_PROJECT_ID` | ✅ | ID do projeto Firebase (ex: `meu-app-12345`) |
+> | `MERCADO_PAGO_TOKEN` | ⚠️ | Token de acesso MercadoPago (necessário para pagamentos) |
+> | `GEMINI_API_KEY` | ⚠️ | Chave da API Google Gemini (necessária para funcionalidades de IA) |
 >
 > Pull Requests recebem um **preview channel** com URL temporária para revisão antes do merge.
 

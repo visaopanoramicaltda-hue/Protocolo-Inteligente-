@@ -1,10 +1,9 @@
 
 export const environment = {
   production: true,
-  // As chaves do Supabase foram removidas pois o sistema agora opera 100% offline.
-  // Cole aqui sua chave de API do Google Gemini
+  // Injetado pelo CI via GitHub Secret GEMINI_API_KEY (veja .github/workflows/firebase-hosting.yml)
   geminiApiKey: '',
-  // Configuração Backend Financeiro
-  mercadoPagoAccessToken: 'APP_USR-2135104547902390-012816-2e7268414ab6337ddbc811e615406d96-3166239306',
+  // Injetado pelo CI via GitHub Secret MERCADO_PAGO_TOKEN (veja .github/workflows/firebase-hosting.yml)
+  mercadoPagoAccessToken: '',
   enableImmutabilityChecks: true
 };
