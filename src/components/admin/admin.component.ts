@@ -21,6 +21,7 @@ import { QuantumNetComponent } from '../quantum-net/quantum-net.component';
 import { DeepSeekService } from '../../services/deep-seek.service'; 
 import { DeviceContactService } from '../../services/device-contact.service';
 import { jsPDF } from 'jspdf';
+import JSZip from 'jszip';
 
 type Tab = 'dashboard' | 'porteiros' | 'moradores' | 'transportadoras' | 'encomendas' | 'correspondencias' | 'relatorios' | 'logs' | 'sistema' | 'backup' | 'suporte' | 'termos' | 'quantum' | 'deepseek' | 'inbox' | 'network'; 
 type SettingsSubTab = 'ENGINE' | 'POLICY' | 'QUEUE';
@@ -1351,5 +1352,82 @@ export class AdminHubComponent implements OnInit, OnDestroy {
         case 'CONFIG': return 'bg-purple-100 text-purple-800 border-purple-200';
         default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  }
+
+  async baixarZip() {
+      this.ui.show('Gerando arquivo ZIP...', 'INFO');
+      try {
+          const zip = new JSZip();
+          const ts = Date.now();
+
+          // JSON backup
+          const json = await this.db.exportDataJson();
+          zip.file(`backup_${ts}.json`, json);
+
+          // Encomendas CSV
+          const encomendas = this.db.encomendas();
+          if (encomendas.length > 0) {
+              const encCsv = [
+                  'ID,DESTINATARIO,BLOCO,APTO,TRANSPORTADORA,CODIGO_RASTREIO,STATUS,DATA_ENTRADA,DATA_SAIDA,OBSERVACOES',
+                  ...encomendas.map(e => [
+                      e.id,
+                      `"${(e.destinatarioNome || '').replace(/"/g, '""')}"`,
+                      e.bloco || '',
+                      e.apto || '',
+                      `"${(e.transportadora || '').replace(/"/g, '""')}"`,
+                      e.codigoRastreio || '',
+                      e.status,
+                      e.dataEntrada,
+                      e.dataSaida || '',
+                      `"${(e.observacoes || '').replace(/"/g, '""')}"`
+                  ].join(','))
+              ].join('\n');
+              zip.file(`encomendas_${ts}.csv`, '\uFEFF' + encCsv);
+          }
+
+          // Moradores CSV
+          const moradores = this.db.moradores();
+          if (moradores.length > 0) {
+              const morCsv = [
+                  'ID,NOME,BLOCO,APTO,TELEFONE',
+                  ...moradores.map(m => [
+                      m.id,
+                      `"${(m.nome || '').replace(/"/g, '""')}"`,
+                      m.bloco,
+                      m.apto,
+                      m.telefone || ''
+                  ].join(','))
+              ].join('\n');
+              zip.file(`moradores_${ts}.csv`, '\uFEFF' + morCsv);
+          }
+
+          // Logs CSV
+          const logs = this.db.logs();
+          if (logs.length > 0) {
+              const logsCsv = [
+                  'DATA,USUARIO,ACAO,DETALHES',
+                  ...logs.map(l => {
+                      const date = new Date(l.timestamp).toLocaleString('pt-BR');
+                      const userName = `"${(l.userName || '').replace(/"/g, '""')}"`;
+                      const action = `"${(l.action || '').replace(/"/g, '""')}"`;
+                      const details = `"${(l.details || '').replace(/"/g, '""')}"`;
+                      return `${date},${userName},${action},${details}`;
+                  })
+              ].join('\n');
+              zip.file(`auditoria_${ts}.csv`, '\uFEFF' + logsCsv);
+          }
+
+          const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `backup_completo_${ts}.zip`;
+          a.click();
+          URL.revokeObjectURL(url);
+          this.ui.show('ZIP gerado e baixado com sucesso!', 'SUCCESS');
+      } catch (e) {
+          console.error('[Admin] Falha ao gerar ZIP:', e);
+          this.ui.show('Erro ao gerar arquivo ZIP.', 'ERROR');
+      }
   }
 }
