@@ -127,6 +127,14 @@ O GitHub nunca mostra esses valores depois de salvos — nem para você.
 
 ---
 
+> ✅ **VOCÊ ESTÁ NA TELA CERTA se vê:**
+> - Título: **"Segredos de ações / Novo segredo"**
+> - Campo **"Nome \*"** (com placeholder "SEU_NOME_SECRETO")
+> - Campo **"Segredo \*"** (caixa de texto grande)
+> - Botão verde **"Adicionar segredo"**
+>
+> Se está vendo isso, **ótimo — é exatamente aqui que você precisa estar!** Continue abaixo.
+
 **Agora você vai criar 4 secrets, um de cada vez:**
 
 ---
@@ -135,16 +143,16 @@ O GitHub nunca mostra esses valores depois de salvos — nem para você.
 
 Este é o conteúdo do arquivo `.json` que você baixou no Passo 4.
 
-1. No campo **"Name"**, digite exatamente:
+1. No campo **"Nome \*"**, digite exatamente:
    ```
    FIREBASE_SERVICE_ACCOUNT
    ```
 
-2. No campo **"Secret"**, cole **todo o conteúdo** do arquivo `.json` (Ctrl+V / Cmd+V)
+2. No campo **"Segredo \*"**, cole **todo o conteúdo** do arquivo `.json` (pressione e segure o campo → "Colar")
    - Deve começar com `{` e terminar com `}`
    - Pode ter muitas linhas — isso é normal
 
-3. Clique em **"Add secret"**
+3. Toque no botão verde **"Adicionar segredo"**
 
 ---
 
@@ -152,17 +160,17 @@ Este é o conteúdo do arquivo `.json` que você baixou no Passo 4.
 
 Este é o ID do projeto que você anotou no Passo 3.
 
-1. Clique em **"New repository secret"** novamente
+1. Toque em **"New repository secret"** novamente
 
-2. No campo **"Name"**, digite exatamente:
+2. No campo **"Nome \*"**, digite exatamente:
    ```
    FIREBASE_PROJECT_ID
    ```
 
-3. No campo **"Secret"**, cole o ID do projeto (ex: `protocolo-inteligente-a1b2c`)
+3. No campo **"Segredo \*"**, cole o ID do projeto (ex: `protocolo-inteligente-a1b2c`)
    - Só o ID, sem espaços, sem aspas
 
-4. Clique em **"Add secret"**
+4. Toque no botão verde **"Adicionar segredo"**
 
 ---
 
@@ -170,16 +178,16 @@ Este é o ID do projeto que você anotou no Passo 3.
 
 Esta é a chave que você obteve no Passo 5.
 
-1. Clique em **"New repository secret"** novamente
+1. Toque em **"New repository secret"** novamente
 
-2. No campo **"Name"**, digite exatamente:
+2. No campo **"Nome \*"**, digite exatamente:
    ```
    GEMINI_API_KEY
    ```
 
-3. No campo **"Secret"**, cole a chave (começa com `AIza...`)
+3. No campo **"Segredo \*"**, cole a chave (começa com `AIza...`)
 
-4. Clique em **"Add secret"**
+4. Toque no botão verde **"Adicionar segredo"**
 
 ---
 
@@ -193,16 +201,16 @@ Este é o token de acesso da sua conta MercadoPago (necessário para processar p
    - Copie o **"Access token"** de teste (começa com `TEST-...`)
    - _(Para produção real: troque por "Credenciais de produção" → Access token `APP_USR-...`)_
 
-2. Clique em **"New repository secret"** novamente
+2. Toque em **"New repository secret"** novamente
 
-3. No campo **"Name"**, digite exatamente:
+3. No campo **"Nome \*"**, digite exatamente:
    ```
    MERCADO_PAGO_TOKEN
    ```
 
-4. No campo **"Secret"**, cole o token
+4. No campo **"Segredo \*"**, cole o token
 
-5. Clique em **"Add secret"**
+5. Toque no botão verde **"Adicionar segredo"**
 
 ---
 

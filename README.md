@@ -57,15 +57,18 @@
 3. No menu **lateral esquerdo**, desça até **"Security"** e toque em **"Secrets and variables"**
 4. No submenu que abrir, toque em **"Actions"**
 5. Toque no botão verde **"New repository secret"**
+   → Você verá uma tela com título **"Segredos de ações / Novo segredo"** e dois campos: **"Nome \*"** e **"Segredo \*"** — você está na tela certa! ✅
 
 Crie um secret de cada vez com estes nomes e valores:
 
-| Name (copie exato) | Secret (valor) |
+| Campo "Nome \*" (copie exato) | Campo "Segredo \*" (valor a colar) |
 |---|---|
 | `FIREBASE_SERVICE_ACCOUNT` | Conteúdo completo do arquivo `.json` do Passo 4 |
 | `FIREBASE_PROJECT_ID` | O ID anotado no Passo 3 (ex: `meu-app-a1b2c3`) |
 | `GEMINI_API_KEY` | A chave `AIza...` do Passo 5 |
 | `MERCADO_PAGO_TOKEN` | Seu token em [mercadopago.com.br/developers/panel](https://www.mercadopago.com.br/developers/panel) → Credenciais de **teste** → Access token _(use credenciais de teste primeiro para não fazer cobranças reais)_ |
+
+Após preencher cada linha, toque no botão verde **"Adicionar segredo"**.
 
 ---
 
