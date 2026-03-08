@@ -4,6 +4,71 @@
 
 # 📦 Simbiose – Protocolo Inteligente v9.9
 
+---
+
+## 🟢 PRÓXIMOS PASSOS — Publicar o App Online
+
+> ✅ Passos 1 e 2 já concluídos (projeto Firebase criado e Hosting ativado).
+> Siga os passos abaixo em ordem. Leva cerca de 15 minutos.
+
+### 👉 Passo 3 — Descobrir o ID do projeto Firebase
+
+1. Abra **[console.firebase.google.com](https://console.firebase.google.com/)** no celular ou computador
+2. Clique no seu projeto
+3. Clique na **engrenagem ⚙️** no canto superior esquerdo → **"Configurações do projeto"**
+4. Na aba **"Geral"**, procure **"ID do projeto"** (ex: `meu-app-a1b2c3`)
+5. **Anote esse ID** — você vai usar nos próximos passos
+
+---
+
+### 👉 Passo 4 — Gerar a chave de deploy
+
+1. Ainda em ⚙️ Configurações → clique na aba **"Contas de serviço"**
+2. Clique em **"Gerar nova chave privada"** → **"Gerar chave"**
+3. Um arquivo `.json` vai baixar no seu computador
+4. Abra com **Bloco de Notas** (Windows) ou **TextEdit** (Mac), **selecione tudo** (Ctrl+A) e **copie** (Ctrl+C)
+
+---
+
+### 👉 Passo 5 — Obter chave da IA (Gemini)
+
+1. Abra **[aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)**
+2. Clique em **"Create API key"** → escolha seu projeto → **"Create"**
+3. Copie a chave (começa com `AIza...`)
+
+---
+
+### 👉 Passo 6 — Cadastrar as 4 chaves no GitHub (Secrets)
+
+Acesse: **Settings** (menu superior do repositório) → **Secrets and variables** → **Actions** → **New repository secret**
+
+Crie um secret de cada vez com estes nomes e valores:
+
+| Name (copie exato) | Secret (valor) |
+|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` | Conteúdo completo do arquivo `.json` do Passo 4 |
+| `FIREBASE_PROJECT_ID` | O ID anotado no Passo 3 (ex: `meu-app-a1b2c3`) |
+| `GEMINI_API_KEY` | A chave `AIza...` do Passo 5 |
+| `MERCADO_PAGO_TOKEN` | Seu token em [mercadopago.com.br/developers/panel](https://www.mercadopago.com.br/developers/panel) → Credenciais de **teste** → Access token _(use credenciais de teste primeiro para não fazer cobranças reais)_ |
+
+---
+
+### 👉 Passo 7 — Disparar o deploy
+
+Após cadastrar os 4 secrets:
+1. Vá na aba **"Actions"** do repositório
+2. Clique em **"Deploy to Firebase Hosting"**
+3. Clique em **"Run workflow"** → **"Run workflow"**
+4. Aguarde o ✅ verde e acesse: `https://SEU-PROJETO-ID.web.app`
+
+---
+
+> 📖 **Guia completo e detalhado:** [DEPLOY.md](./DEPLOY.md)
+>
+> ❓ **Travou em algum passo?** Abra uma issue com um print da tela e eu te ajudo.
+
+---
+
 Sistema de Gestão de Portaria com IA (Angular 21 + Gemini 2.0 Flash)
 
 ---

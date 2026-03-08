@@ -177,10 +177,11 @@ Esta é a chave que você obteve no Passo 5.
 
 Este é o token de acesso da sua conta MercadoPago (necessário para processar pagamentos).
 
-1. Para obter o token:
+1. Para obter o token de **teste** (comece sempre pelo teste para não fazer cobranças reais):
    - Acesse [https://www.mercadopago.com.br/developers/panel](https://www.mercadopago.com.br/developers/panel)
-   - Faça login → **"Suas integrações"** → selecione seu app → **"Credenciais de produção"**
-   - Copie o **"Access token"** (começa com `APP_USR-...`)
+   - Faça login → **"Suas integrações"** → selecione seu app → **"Credenciais de teste"**
+   - Copie o **"Access token"** de teste (começa com `TEST-...`)
+   - _(Para produção real: troque por "Credenciais de produção" → Access token `APP_USR-...`)_
 
 2. Clique em **"New repository secret"** novamente
 
