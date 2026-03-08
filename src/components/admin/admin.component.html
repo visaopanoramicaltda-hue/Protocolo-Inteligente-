@@ -553,6 +553,7 @@
                         <option value="PORTEIROS">👮 Lista de Porteiros</option>
                         <option value="MORADORES">🏢 Lista de Moradores</option>
                         <option value="ENTREGADORES">🚚 Transportadoras</option>
+                        <option value="LOGS">📋 Auditoria – Detalhado por Ação</option>
                     </select>
                 </div>
 
@@ -669,7 +670,14 @@
 <!-- CONFIGURAÇÕES (SISTEMA) -->
 <ng-template #configTab>
     <div class="space-y-8 max-w-3xl mx-auto">
-        <h3 class="text-xl font-black text-white uppercase tracking-widest border-b border-white/10 pb-4">Configurações Globais</h3>
+        <div class="flex items-center justify-between border-b border-white/10 pb-4">
+            <h3 class="text-xl font-black text-white uppercase tracking-widest">Configurações Globais</h3>
+            <button (click)="goBackToDashboard()" class="group flex items-center gap-2 px-4 py-2 border border-white/10 bg-white/5 rounded-full text-white font-bold uppercase text-[10px] tracking-widest hover:bg-[#E86C26] hover:border-[#E86C26] transition-all cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                Voltar
+            </button>
+        </div>
+
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-4">

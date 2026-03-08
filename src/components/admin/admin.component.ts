@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { UiService } from '../../services/ui.service';
 import { GoogleDriveService } from '../../services/google-drive.service';
 import { DataProtectionService } from '../../services/data-protection.service';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GeminiService } from '../../services/gemini.service';
 import { PdfService } from '../../services/pdf.service';
 import { SimbiosePolicyEngine, FuncaoUsuario, AcaoSistema } from '../../services/core/simbiose-policy.service';
@@ -26,11 +26,11 @@ type Tab = 'dashboard' | 'porteiros' | 'moradores' | 'transportadoras' | 'encome
 type SettingsSubTab = 'ENGINE' | 'POLICY' | 'QUEUE';
 type DocType = 'NONE' | 'FEATURES' | 'MANUAL' | 'CUSTOM_REPORT' | 'AUDIT_LOG';
 type FolderAnimState = 'NONE' | 'SAVING' | 'RESTORING';
-type ReportType = 'ENCOMENDAS' | 'PORTEIROS' | 'MORADORES' | 'ENTREGADORES';
+type ReportType = 'ENCOMENDAS' | 'PORTEIROS' | 'MORADORES' | 'ENTREGADORES' | 'LOGS';
 
 @Component({
   selector: 'app-admin-hub',
-  imports: [CommonModule, FormsModule, RouterLink, DatePipe, QuantumNetComponent],
+  imports: [CommonModule, FormsModule, DatePipe, QuantumNetComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush, 
   templateUrl: './admin.component.html',
@@ -138,6 +138,7 @@ export class AdminHubComponent implements OnInit, OnDestroy {
   correspondenciaFilterEndDate = signal('');
   
   // REPORT STATES
+  private readonly MAX_DATE_VALUE = 8640000000000000; // ECMAScript maximum Date value
   reportType = signal<ReportType>('ENCOMENDAS');
   reportStartDate = signal('');
   reportEndDate = signal('');
@@ -1271,7 +1272,7 @@ export class AdminHubComponent implements OnInit, OnDestroy {
               // 1. DATA FILTRAGEM (TIMEZONE SAFE)
               // Constrói datas locais baseadas na string de entrada YYYY-MM-DD
               const startDate = this.reportStartDate() ? new Date(this.reportStartDate() + 'T00:00:00') : new Date(0);
-              const endDate = this.reportEndDate() ? new Date(this.reportEndDate() + 'T23:59:59') : new Date(8640000000000000); // Max Date
+              const endDate = this.reportEndDate() ? new Date(this.reportEndDate() + 'T23:59:59') : new Date(this.MAX_DATE_VALUE); // Max Date
               
               items = items.filter(e => {
                   const itemDate = new Date(e.dataEntrada);
@@ -1309,6 +1310,20 @@ export class AdminHubComponent implements OnInit, OnDestroy {
           } else if (type === 'ENTREGADORES') {
               const carriers = this.db.carriers();
               result = await this.pdf.generateTransportadorasReport(carriers, user);
+
+          } else if (type === 'LOGS') {
+              let logs = this.db.logs();
+              const startDate = this.reportStartDate() ? new Date(this.reportStartDate() + 'T00:00:00') : new Date(0);
+              const endDate = this.reportEndDate() ? new Date(this.reportEndDate() + 'T23:59:59') : new Date(this.MAX_DATE_VALUE);
+              logs = logs.filter(l => {
+                  const d = new Date(l.timestamp);
+                  return d >= startDate && d <= endDate;
+              });
+              if (logs.length === 0) {
+                  this.ui.show('Nenhuma ação registrada no período.', 'WARNING');
+                  return;
+              }
+              result = await this.pdf.generateAuditLogReport(logs, user);
           }
 
           if (result) {

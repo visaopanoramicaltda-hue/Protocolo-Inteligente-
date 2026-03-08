@@ -1,13 +1,31 @@
 
-// FIX: The original content of this file was HTML, which is not valid TypeScript.
-// It has been replaced with a default Capacitor configuration to resolve the compilation errors.
-// If the HTML content was important, it should be moved to a separate .html file.
+import { CapacitorConfig } from '@capacitor/core';
 
-const config = {
-  appId: 'com.seuusuario.simbiose',
-  appName: 'Protocolo Inteligente',
-  webDir: 'dist/browser',
-  bundledWebRuntime: false,
+const config: CapacitorConfig = {
+  appId: 'br.com.simbiose.protocolo',
+  appName: 'Simbiose',
+  webDir: 'dist',
+  android: {
+    backgroundColor: '#050505',
+    allowMixedContent: false,
+    captureInput: false,
+    webContentsDebuggingEnabled: false,
+  },
+  ios: {
+    backgroundColor: '#050505',
+    contentInset: 'automatic',
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 0,
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
+  },
+  server: {
+    androidScheme: 'https',
+  },
 };
 
 export default config;

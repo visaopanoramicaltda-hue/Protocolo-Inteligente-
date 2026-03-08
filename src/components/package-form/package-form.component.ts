@@ -1,6 +1,6 @@
 
 import { Component, inject, signal, computed, ViewChild, ElementRef, AfterViewInit, OnDestroy, effect, ChangeDetectionStrategy, ChangeDetectorRef, NgZone } from '@angular/core';
-import { CommonModule, DatePipe, PercentPipe, DecimalPipe } from '@angular/common';
+import { CommonModule, PercentPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DbService, Encomenda, Morador } from '../../services/db.service';
@@ -14,7 +14,7 @@ import { ExclusiveScannerService } from '../../services/exclusive-scanner.servic
 @Component({
   selector: 'app-package-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, PercentPipe, DecimalPipe],
+  imports: [CommonModule, FormsModule, PercentPipe, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './package-form.component.html'
 })
@@ -768,31 +768,45 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
       if (!blob || !pkg) return;
       this.hasSharedProof.set(true);
 
-      const text = `*PROTOCOLO DE ENTRADA* 📦\n\nOlá ${pkg.destinatarioNome},\nChegou uma encomenda para você!\n\n📍 Unidade: ${pkg.bloco}-${pkg.apto}\n🚚 Via: ${pkg.transportadora}\n📅 ${new Date(pkg.dataEntrada).toLocaleString()}`;
+      const text = `*PROTOCOLO DE ENTRADA* 📦\n\nOlá ${pkg.destinatarioNome},\nChegou uma encomenda para você!\n\n📍 Unidade: ${pkg.bloco}-${pkg.apto}\n🚚 Via: ${pkg.transportadora}\n📅 ${new Date(pkg.dataEntrada).toLocaleString()}\n\n_Simbiose Portaria Digital_`;
 
-      if (navigator.share && navigator.canShare) {
-          const file = new File([blob], `Protocolo_${pkg.id.substring(0,6)}.pdf`, { type: 'application/pdf' });
-          const shareData = { files: [file], title: 'Comprovante de Chegada', text: text };
-          try {
-              if (navigator.canShare(shareData)) { await navigator.share(shareData); return; }
-          } catch (e) { console.warn('Native share failed or cancelled', e); }
-      }
-
-      this.ui.show('PDF salvo. Compartilhe manualmente se necessário.', 'INFO');
+      // Find resident phone
       let phone = '';
       const resident = this.db.moradores().find(m => 
           this.normalizeString(m.bloco) === this.normalizeString(pkg.bloco || '') && 
           this.normalizeString(m.apto) === this.normalizeString(pkg.apto || '') &&
           (m.isPrincipal || this.normalizeString(m.nome) === this.normalizeString(pkg.destinatarioNome))
+      ) || this.db.moradores().find(m =>
+          this.normalizeString(m.bloco) === this.normalizeString(pkg.bloco || '') &&
+          this.normalizeString(m.apto) === this.normalizeString(pkg.apto || '')
       );
       if (resident && resident.telefone) {
           phone = resident.telefone.replace(/\D/g, '');
           if (phone.length >= 8 && !phone.startsWith('55')) phone = '55' + phone;
       }
-      const waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+      // Try Web Share API (sends PDF as file attachment – opens native WhatsApp directly)
+      if (navigator.share && navigator.canShare) {
+          const file = new File([blob], `Protocolo_${pkg.id.substring(0,6)}.pdf`, { type: 'application/pdf' });
+          const shareData: ShareData = { files: [file], title: 'Comprovante de Chegada', text: text };
+          try {
+              if (navigator.canShare(shareData)) {
+                  await navigator.share(shareData);
+                  return;
+              }
+          } catch (e: any) {
+              if (e?.name !== 'AbortError') console.warn('Native share failed', e);
+          }
+      }
+
+      // Fallback: open WhatsApp conversation directly with resident's phone
+      const waUrl = phone
+          ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
+          : `https://wa.me/?text=${encodeURIComponent(text)}`;
       window.open(waUrl, '_blank');
+      // Also open the PDF so the doorman can forward it manually
       const pdfUrl = this.localPdfUrl();
-      if(pdfUrl) window.open(pdfUrl, '_blank');
+      if (pdfUrl) window.open(pdfUrl, '_blank');
   }
 
   viewPdf() {
@@ -943,6 +957,38 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
   selectInlineCarrier(carrier: string) {
     this.updateModel('transportadora', carrier);
     this.showInlineCarrierSuggestions.set(false);
+  }
+
+  showUnitResidentPicker = signal(false);
+
+  unitResidentsList = computed(() => {
+    const bloco = (this.packageData().bloco || '').trim();
+    const apto = (this.packageData().apto || '').trim();
+    if (!bloco && !apto) return [];
+    return this.db.moradores().filter(m =>
+      this.normalizeString(m.bloco) === this.normalizeString(bloco) &&
+      this.normalizeString(m.apto) === this.normalizeString(apto)
+    );
+  });
+
+  openUnitResidentPicker() {
+    if (this.isReadOnly()) return;
+    const bloco = (this.packageData().bloco || '').trim();
+    const apto = (this.packageData().apto || '').trim();
+    if (!bloco || !apto) {
+      this.ui.show('Preencha Bloco e Unidade para ver os moradores.', 'WARNING');
+      return;
+    }
+    if (this.unitResidentsList().length === 0) {
+      this.ui.show('Nenhum morador cadastrado nesta unidade.', 'INFO');
+      return;
+    }
+    this.showUnitResidentPicker.set(true);
+  }
+
+  selectUnitResident(resident: Morador) {
+    this.updateModel('destinatarioNome', resident.nome);
+    this.showUnitResidentPicker.set(false);
   }
 
   selectRelatedResident(resident: Morador) {

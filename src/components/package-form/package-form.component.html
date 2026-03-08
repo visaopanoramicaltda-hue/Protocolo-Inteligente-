@@ -203,6 +203,7 @@
                        [disabled]="isReadOnly()"
                        name="bloco_safe"
                        autocomplete="off"
+                       (blur)="showUnitResidentPicker.set(false)"
                        type="text" 
                        class="w-full bg-white border-b-2 border-[#2a2320] py-3 text-center text-xl font-black uppercase text-[#2a2320] outline-none focus:border-[#E86C26] transition-all rounded-t-sm shadow-sm">
             </div>
@@ -213,10 +214,37 @@
                        [disabled]="isReadOnly()"
                        name="apto_safe"
                        autocomplete="off"
+                       (blur)="showUnitResidentPicker.set(false)"
                        type="text" 
                        class="w-full bg-white border-b-2 border-[#2a2320] py-3 text-center text-xl font-black uppercase text-[#2a2320] outline-none focus:border-[#E86C26] transition-all rounded-t-sm shadow-sm">
             </div>
         </div>
+        <!-- MORADORES DA UNIDADE (dropdown ao clicar em Bloco/Apto) -->
+        @if (!isReadOnly() && packageData().bloco && packageData().apto && unitResidentsList().length > 0) {
+            <div class="bg-[#EAE0D5] border border-[#d1c4b5] rounded-sm shadow-inner animate-[fadeIn_0.2s]">
+                <div class="text-[8px] font-black uppercase text-[#5c4d46] tracking-widest px-3 pt-2 pb-1 border-b border-[#d1c4b5]">
+                    👥 Moradores da Unidade {{ packageData().bloco }}-{{ packageData().apto }}
+                </div>
+                <div class="flex flex-col divide-y divide-[#d1c4b5]">
+                    @for (resident of unitResidentsList(); track resident.id) {
+                        <button (click)="selectUnitResident(resident)"
+                                class="flex items-center gap-3 px-3 py-2.5 hover:bg-[#E86C26] hover:text-white transition-colors text-left group"
+                                [class.bg-[#E86C26]]="packageData().destinatarioNome === resident.nome"
+                                [class.text-white]="packageData().destinatarioNome === resident.nome">
+                            <span class="text-sm font-black uppercase text-[#2a2320] group-hover:text-white flex-1"
+                                  [class.text-white]="packageData().destinatarioNome === resident.nome">
+                                @if (resident.isPrincipal) { <span class="mr-1 text-[#E86C26] group-hover:text-white">★</span> }
+                                {{ resident.nome }}
+                            </span>
+                            <span class="text-[8px] font-bold uppercase text-[#8a7a70] group-hover:text-white/80"
+                                  [class.text-white/80]="packageData().destinatarioNome === resident.nome">
+                                SELECIONAR
+                            </span>
+                        </button>
+                    }
+                </div>
+            </div>
+        }
 
         <!-- TRANSPORTADORA -->
         <div class="relative">

@@ -1,11 +1,11 @@
-
 {
   "name": "Protocolo Inteligente",
   "short_name": "Protocolo",
-  "description": "Aplicativo Protocolo Inteligente - Gestão de Portaria",
+  "description": "Sistema Profissional de Portaria",
   "lang": "pt-BR",
   "start_url": "/",
   "scope": "/",
+  "id": "protocolo-inteligente",
   "display": "standalone",
   "display_override": [
     "window-controls-overlay",
@@ -20,12 +20,47 @@
     "business"
   ],
   "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "label": "Dashboard – Visão Geral das Encomendas",
+      "form_factor": "narrow",
+      "type": "image/png",
+      "src": "assets/screenshot-dashboard.png",
+      "sizes": "390x844"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova Encomenda",
+      "short_name": "Escanear",
+      "url": "/#/package/new?autoStart=true",
+      "description": "Escanear etiqueta de nova encomenda"
+    },
+    {
+      "name": "Painel Admin",
+      "short_name": "Admin",
+      "url": "/#/admin",
+      "description": "Abrir painel de controle"
+    }
+  ],
   "icons": [
     {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImxlYXRoZXJHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjNmI0MjM1Ii8+PHN0b3Agb2ZZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjM2UyMzE4Ii8+PHN0b3Agb2ZZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzFhMGIwNiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJnb2xkR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2ZZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmMmU2YmYiLz48c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iI2Q0YWYzNyIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2FhOGMyYyIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjQ5MiIgaGVpZ2h0PSI0OTIiIHJ4PSIxMDAiIGZpbGw9InVybCgjbGVhdGhlckdyYWQpIiBzdHJva2U9IiMxYTBiMDYiIHN0cm9rZS13aWR0aD0iNCIvPjxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjQxMiIgaGVpZ2h0PSI0MTIiIHJ4PSI2NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGE2YTVjIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1kYXNoYXJyYXk9IjIwIDE1IiBvcGFjaXR5PSIwLjgiLz48cGF0aCBkPSJNMTgwIDE0MCBIIDMwMCBRIDM4MCAxNDAgMzgwIDIyMCBRIDM4MCAzMDAgMzAwIDMwMCBVIDIxMCBWIDQwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI2dvbGRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIzNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBmaWx0ZXI9ImRyb3Atc2hhZG93KDJweCA0cHggNnB4IHJnYmEoMCwwLDAsMC41KSkiLz48bGluZSB4MT0iMjEwIiB5MT0iMTQwIiB4Mj0iMjEwIiB5Mj0iNDAwIiBzdHJva2U9InVybCgjZ29sZEdyYWQpIiBzdHJva2Utd2lkdGg9IzM1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbHRlcj0iZHJvcC1zaGFkb3coMnB4IDRweCA2cHggcmdiYSgwLDAsMCwwLjUpKSIvPjwvc3ZnPg==",
-      "type": "image/svg+xml",
+      "src": "icon-512x512.png",
+      "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512x512-maskable.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
     }
   ]
 }

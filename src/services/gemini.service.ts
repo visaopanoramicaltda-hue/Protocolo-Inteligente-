@@ -468,7 +468,7 @@ export class GeminiService {
       if (this.geminiApiStatus() !== 'CONFIGURED') throw new Error("No API Key");
 
       const response = await this.genAI.models.generateContent({
-        model: 'gemini-2.5-flash', 
+        model: 'gemini-2.0-flash', 
         contents: { parts: [{ inlineData: { mimeType: 'image/jpeg', data: base64 } }, { text: prompt }] },
         config: { systemInstruction, responseMimeType: 'application/json', responseSchema, temperature: 0.0, thinkingConfig: { thinkingBudget: 0 } }
       });
