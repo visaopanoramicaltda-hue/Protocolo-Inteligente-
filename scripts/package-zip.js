@@ -52,7 +52,7 @@ const srcZip = path.join(ROOT, `Simbiose-Source-v${VERSION}-${TIMESTAMP}.zip`);
 console.log(`📦 Empacotando código-fonte => ${path.basename(srcZip)}`);
 try {
   execSync(
-    `zip -r "${srcZip}" . --exclude "node_modules/*" --exclude "dist/*" --exclude ".git/*" --exclude "*.zip"`,
+    `zip -r "${srcZip}" . --exclude "node_modules/*" --exclude "dist/*" --exclude ".git/*" --exclude "*.zip" --exclude ".env" --exclude ".env.*" --exclude "*credentials*" --exclude "*secrets*" --exclude "*.key" --exclude "*.pem"`,
     { cwd: ROOT, stdio: 'pipe' }
   );
   console.log(`✅ Source ZIP criado: ${path.basename(srcZip)}`);

@@ -138,6 +138,7 @@ export class AdminHubComponent implements OnInit, OnDestroy {
   correspondenciaFilterEndDate = signal('');
   
   // REPORT STATES
+  private readonly MAX_DATE_VALUE = 8640000000000000; // ECMAScript maximum Date value
   reportType = signal<ReportType>('ENCOMENDAS');
   reportStartDate = signal('');
   reportEndDate = signal('');
@@ -1271,7 +1272,7 @@ export class AdminHubComponent implements OnInit, OnDestroy {
               // 1. DATA FILTRAGEM (TIMEZONE SAFE)
               // Constrói datas locais baseadas na string de entrada YYYY-MM-DD
               const startDate = this.reportStartDate() ? new Date(this.reportStartDate() + 'T00:00:00') : new Date(0);
-              const endDate = this.reportEndDate() ? new Date(this.reportEndDate() + 'T23:59:59') : new Date(8640000000000000); // Max Date
+              const endDate = this.reportEndDate() ? new Date(this.reportEndDate() + 'T23:59:59') : new Date(this.MAX_DATE_VALUE); // Max Date
               
               items = items.filter(e => {
                   const itemDate = new Date(e.dataEntrada);
@@ -1313,7 +1314,7 @@ export class AdminHubComponent implements OnInit, OnDestroy {
           } else if (type === 'LOGS') {
               let logs = this.db.logs();
               const startDate = this.reportStartDate() ? new Date(this.reportStartDate() + 'T00:00:00') : new Date(0);
-              const endDate = this.reportEndDate() ? new Date(this.reportEndDate() + 'T23:59:59') : new Date(8640000000000000);
+              const endDate = this.reportEndDate() ? new Date(this.reportEndDate() + 'T23:59:59') : new Date(this.MAX_DATE_VALUE);
               logs = logs.filter(l => {
                   const d = new Date(l.timestamp);
                   return d >= startDate && d <= endDate;

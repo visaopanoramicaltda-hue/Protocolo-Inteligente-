@@ -159,7 +159,7 @@ export class DbService {
       // Auto-backup com debounce de 2s para não sobrecarregar em ações rápidas
       if (this.autoBackupTimer) clearTimeout(this.autoBackupTimer);
       this.autoBackupTimer = setTimeout(() => {
-          this.saveManualBackupToVirtualFolder(true).catch(() => {});
+          this.saveManualBackupToVirtualFolder(true).catch((error) => console.error('[Auto-backup] Falha no backup automático:', error));
       }, 2000);
   }
 
