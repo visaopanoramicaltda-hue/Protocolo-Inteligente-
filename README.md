@@ -96,8 +96,21 @@ Após cadastrar os 4 secrets:
 1. Vá na aba **"Actions"** do repositório
 2. Clique em **"Deploy to Firebase Hosting"** no menu lateral
 3. Clique no botão **"Run workflow"** → **"Run workflow"** (botão verde)
-4. Aguarde o ✅ verde — o link aparecerá nos logs: `https://SEU-PROJETO-ID.web.app`
-   _(substitua `SEU-PROJETO-ID` pelo ID do secret `FIREBASE_PROJECT_ID`)_
+4. Aguarde o ✅ verde
+
+### 👉 Passo 8 — Ver o link do seu app
+
+Após o ✅ verde aparecer no run:
+1. Clique no run (item da lista na aba Actions)
+2. Abra a aba **"Summary"** — o link do seu app aparece em destaque ali
+
+O link permanente do seu app é sempre:
+```
+https://SEU-PROJETO-ID.web.app
+```
+_(substitua `SEU-PROJETO-ID` pelo ID do secret `FIREBASE_PROJECT_ID`)_
+
+> 💡 **Dica:** Você também encontra o link nos logs do job — clique no job **"Build & Deploy"** → etapa **"Mostrar link do app no resumo do workflow"**
 
 ---
 

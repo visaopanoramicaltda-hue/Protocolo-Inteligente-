@@ -258,12 +258,27 @@ Após mesclar o PR e cadastrar os 4 secrets, **dispare o deploy manualmente** as
 
 ---
 
-## 👀 Passo 8 — Acompanhar e verificar o deploy
+## 👀 Passo 8 — Acompanhar o deploy e encontrar o link
 
 1. Na aba **"Actions"** do GitHub, você verá um item novo com um círculo amarelo ⏳
 2. Clique nele para ver o progresso em tempo real
 3. Quando ficar verde ✅, o deploy foi feito com sucesso!
-4. O link do seu aplicativo será exibido nos logs do deploy e também fica disponível em:
+
+### 🔗 Onde encontrar o link do seu app
+
+**Opção A — Resumo do workflow (mais fácil):**
+
+Após o ✅ verde:
+1. Clique no run (item da lista de execuções)
+2. Você verá a aba **"Summary"** aberta — o link aparece em destaque assim:
+
+   > ## 🌐 Deploy concluído com sucesso!
+   > **Acesse o aplicativo em:**
+   > ### 👉 https://SEU-PROJETO-ID.web.app
+
+**Opção B — Montar o link você mesmo:**
+
+O link permanente do seu app é sempre:
 
 ```
 https://SEU-PROJETO-ID.web.app
@@ -271,7 +286,13 @@ https://SEU-PROJETO-ID.web.app
 
 _(substitua `SEU-PROJETO-ID` pelo ID que você anotou no Passo 3 — é o mesmo valor do secret `FIREBASE_PROJECT_ID`)_
 
-> 💡 **Dica:** O link exato também aparece no log do GitHub Actions — clique no job **"Build & Deploy"** → procure por `Hosting URL: https://...`
+**Opção C — Nos logs do job:**
+
+1. Clique no run → clique no job **"Build & Deploy"**
+2. Procure a etapa **"Mostrar link do app no resumo do workflow"**
+3. Você verá uma linha: `✅  App publicado em: https://SEU-PROJETO-ID.web.app`
+
+> 💡 **Dica rápida:** Se o `FIREBASE_PROJECT_ID` for `meu-app-a1b2c3`, o link será `https://meu-app-a1b2c3.web.app`
 
 ---
 

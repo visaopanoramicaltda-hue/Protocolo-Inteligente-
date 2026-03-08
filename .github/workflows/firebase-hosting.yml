@@ -79,6 +79,7 @@ jobs:
           channelId: pr-${{ github.event.number }}
 
       - name: Deploy to Firebase Hosting (live channel on push or manual)
+        id: deploy_live
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -86,3 +87,26 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
           channelId: live
+
+      - name: Mostrar link do app no resumo do workflow
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && success()
+        env:
+          DEPLOY_URLS: ${{ steps.deploy_live.outputs.urls }}
+          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: |
+          APP_URL="${DEPLOY_URLS:-https://${PROJECT_ID}.web.app}"
+          {
+            echo "## 🌐 Deploy concluído com sucesso!"
+            echo ""
+            echo "**Acesse o aplicativo em:**"
+            echo ""
+            echo "### 👉 ${APP_URL}"
+            echo ""
+            echo "---"
+            echo "_O link permanente sempre será_ \`https://${PROJECT_ID}.web.app\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo ""
+          echo "✅ ====================================================="
+          echo "✅  App publicado em: ${APP_URL}"
+          echo "✅ ====================================================="
+          echo ""
