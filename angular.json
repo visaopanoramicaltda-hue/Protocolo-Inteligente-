@@ -20,15 +20,22 @@
             "browser": "index.tsx",
             "tsConfig": "tsconfig.json",
             "assets": [
-              "src/assets",
-              "src/manifest.webmanifest"
+              { "glob": "**/*", "input": "src/assets", "output": "assets" },
+              { "glob": "manifest.webmanifest", "input": "src", "output": "/" }
             ],
             "serviceWorker": "ngsw-config.json"
           },
           "configurations": {
             "production": {
               "outputHashing": "all",
-              "optimization": true,
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": true
+                },
+                "fonts": false
+              },
               "sourceMap": false,
               "namedChunks": false
             },

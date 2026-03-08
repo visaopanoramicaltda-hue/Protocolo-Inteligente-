@@ -46,17 +46,25 @@ Acesse no navegador: **http://localhost:8080**
 ### Opção C — Deploy no Firebase Hosting (Publicar Online)
 
 ```bash
-# 1. Instale o Firebase CLI (apenas uma vez)
-npm install -g firebase-tools
+# 1. Configure o projeto Firebase (apenas uma vez)
+# Edite .firebaserc e substitua "your-project-id" pelo ID real do seu projeto Firebase
 
 # 2. Faça login no Firebase
-firebase login
+npx firebase login
 
 # 3. Build + Deploy em um comando
 npm run deploy
 ```
 
 O app ficará disponível em: `https://<seu-projeto>.web.app`
+
+> 💡 **Deploy automático via GitHub Actions:** o workflow `.github/workflows/firebase-hosting.yml`
+> faz o deploy automaticamente a cada `push` na branch `main`/`master`.
+> Configure os seguintes **GitHub Secrets** no repositório:
+> - `FIREBASE_SERVICE_ACCOUNT` — JSON da conta de serviço Firebase (gerado em: Firebase Console → Configurações do projeto → Contas de serviço)
+> - `FIREBASE_PROJECT_ID` — ID do projeto Firebase (ex: `meu-app-12345`)
+>
+> Pull Requests recebem um **preview channel** com URL temporária para revisão antes do merge.
 
 ---
 
