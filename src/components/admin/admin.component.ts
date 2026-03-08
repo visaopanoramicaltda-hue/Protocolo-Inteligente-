@@ -10,6 +10,7 @@ import { DataProtectionService } from '../../services/data-protection.service';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { GeminiService } from '../../services/gemini.service';
 import { PdfService } from '../../services/pdf.service';
+import { PdfReportService } from '../../services/pdf-report.service';
 import { SimbiosePolicyEngine, FuncaoUsuario, AcaoSistema } from '../../services/core/simbiose-policy.service';
 import { SimbioseOfflineQueue, FilaItem } from '../../services/core/simbiose-offline-queue.service';
 import { SimbioseSyncService } from '../../services/core/simbiose-sync.service';
@@ -66,6 +67,7 @@ export class AdminHubComponent implements OnInit, OnDestroy {
   protection = inject(DataProtectionService);
   gemini = inject(GeminiService);
   pdf = inject(PdfService);
+  pdfReport = inject(PdfReportService);
   policy = inject(SimbiosePolicyEngine);
   queue = inject(SimbioseOfflineQueue);
   sync = inject(SimbioseSyncService);

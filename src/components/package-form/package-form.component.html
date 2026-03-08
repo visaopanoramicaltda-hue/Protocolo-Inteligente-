@@ -75,6 +75,14 @@
                 </div>
             }
 
+            @if (!isReadOnly() && packageData().fotoBase64) {
+                <!-- RELER BUTTON: Limpa tudo e relê -->
+                <button (click)="rereadScan()"
+                        class="flex items-center gap-2 px-4 py-2 bg-[#2a2320] text-[#EAE0D5] border-2 border-[#2a2320] font-bold uppercase text-[10px] tracking-widest hover:bg-[#E86C26] hover:border-[#E86C26] transition-colors rounded-sm shadow-md">
+                    <span class="text-base leading-none">↺</span> Reler Etiqueta
+                </button>
+            }
+
         } @else {
             <!-- ULTRA 4K LENS BUTTON -->
             <button (mousedown)="startPress()" 

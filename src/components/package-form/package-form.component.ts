@@ -683,6 +683,28 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
       if (permissionChoiceMade) this.startScanner(); 
       else this.showCameraPermissionPrompt.set(true); 
   }
+
+  /** Releitura: limpa tudo (foto, campos OCR, cache) e abre scanner novamente. */
+  rereadScan(): void {
+    // Limpa foto e dados preenchidos pelo OCR
+    this.packageData.update(d => ({
+      ...d,
+      fotoBase64: undefined,
+      destinatarioNome: '',
+      bloco: '',
+      apto: '',
+      transportadora: '',
+      codigoRastreio: '',
+      condicaoFisica: 'Intacta'
+    }));
+    this.initialOcrResult.set(null);
+    this.originalScannedName.set('');
+    this.isPrivacyViolation.set(false);
+    // Limpa cache do gemini para garantir leitura fresca
+    this.gemini.clearOcrCache();
+    this.previousImageData = null;
+    this.openScanner();
+  }
   
   proceedWithCamera() { sessionStorage.setItem('camera_permission_choice_made', 'true'); this.showCameraPermissionPrompt.set(false); this.startScanner(); }
   cancelCameraPermission() { sessionStorage.setItem('camera_permission_choice_made', 'true'); this.showCameraPermissionPrompt.set(false); }

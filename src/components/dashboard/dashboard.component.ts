@@ -7,6 +7,7 @@ import { DbService, Encomenda, Morador } from '../../services/db.service';
 import { AuthService } from '../../services/auth.service';
 import { UiService } from '../../services/ui.service';
 import { PdfService } from '../../services/pdf.service';
+import { MoradorSelectorService, UnitResidents } from '../../services/morador-selector.service';
 
 interface Shelf { title: string; items: Encomenda[]; }
 interface GroupedItem { id: string; destinatarioNome: string; bloco?: string; apto?: string; groupCount: number; groupItems: Encomenda[]; status: string; dataEntrada: string; fotoBase64?: string; transportadora?: string; codigoRastreio?: string; }
@@ -24,6 +25,7 @@ export class DashboardComponent implements OnDestroy {
   ui = inject(UiService);
   router = inject(Router);
   pdf = inject(PdfService);
+  moradorSelector = inject(MoradorSelectorService);
 
   // --- STATE SIGNALS ---
   searchQuery = signal('');
@@ -71,6 +73,10 @@ export class DashboardComponent implements OnDestroy {
   // Local signal for image viewer compatibility
   viewingImage = signal<string | null>(null);
 
+  // Unit Residents Modal (Bloco/Apto click)
+  showUnitResidentsModal = signal(false);
+  unitResidentsData = signal<UnitResidents | null>(null);
+
   // Constants
   readonly CURRENT_APP_VERSION = 'v9.8 NEON';
   readonly filters = ['PENDENTE', 'ENTREGUE', 'CANCELADA'];
@@ -113,6 +119,20 @@ export class DashboardComponent implements OnDestroy {
   }
   
   ngOnDestroy() { this.ui.isImageViewerOpen.set(false); this.ui.isSignatureMode.set(false); }
+
+  /** Abre o modal com os moradores de uma unidade (bloco + apto). */
+  openUnitResidents(bloco: string, apto: string, event: Event): void {
+    event.stopPropagation();
+    if (!bloco || !apto) return;
+    const data = this.moradorSelector.getResidentsForUnit(bloco, apto);
+    this.unitResidentsData.set(data);
+    this.showUnitResidentsModal.set(true);
+  }
+
+  closeUnitResidentsModal(): void {
+    this.showUnitResidentsModal.set(false);
+    this.unitResidentsData.set(null);
+  }
 
   removeReadonly(event: any) { event.target.removeAttribute('readonly'); }
   encomendas = computed(() => this.db.encomendas());

@@ -582,6 +582,9 @@
                 <button (click)="generateReport()" class="w-full py-4 bg-[#E86C26] text-black font-black uppercase text-xs tracking-widest hover:bg-white transition-all rounded shadow-lg mt-4 flex items-center justify-center gap-2">
                     <span>🖨️</span> Visualizar/Gerar PDF Oficial
                 </button>
+                <button (click)="pdfReport.generateActionLog()" class="w-full py-3 bg-white/5 border border-white/20 text-gray-300 font-bold uppercase text-xs tracking-widest hover:bg-white/10 transition-all rounded flex items-center justify-center gap-2">
+                    <span>📋</span> Exportar Log de Ações em PDF
+                </button>
             </div>
 
             <!-- CARD INFORMATIVO -->
@@ -669,7 +672,13 @@
 <!-- CONFIGURAÇÕES (SISTEMA) -->
 <ng-template #configTab>
     <div class="space-y-8 max-w-3xl mx-auto">
-        <h3 class="text-xl font-black text-white uppercase tracking-widest border-b border-white/10 pb-4">Configurações Globais</h3>
+        <!-- BACK BUTTON FOR SETTINGS TAB -->
+        <div class="flex items-center justify-between border-b border-white/10 pb-4">
+            <h3 class="text-xl font-black text-white uppercase tracking-widest">Configurações Globais</h3>
+            <button (click)="goBackToDashboard()" class="group px-4 py-2 border border-white/10 bg-white/5 rounded-full text-white font-bold uppercase text-[10px] tracking-widest hover:bg-[#E86C26] hover:border-[#E86C26] transition-all shadow flex items-center gap-2 cursor-pointer">
+                <span class="group-hover:-translate-x-1 transition-transform">←</span> Voltar
+            </button>
+        </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-4">

@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { filter } from 'rxjs/operators';
 import { BackPressService } from './services/core/back-press.service';
 import { SingleSessionService } from './services/core/single-session.service';
+import { BackupAutoService } from './services/backup-auto.service';
 
 @Component({
   selector: 'app-root',
@@ -29,6 +30,7 @@ export class AppComponent implements OnDestroy, OnInit {
   gemini = inject(GeminiService); 
   deepSeek = inject(DeepSeekService); 
   sessionGuard = inject(SingleSessionService); 
+  private backupAuto = inject(BackupAutoService);
   private router = inject(Router);
   
   // Update State
@@ -94,6 +96,13 @@ export class AppComponent implements OnDestroy, OnInit {
     
     this.quantumNet.conectarRede();
     this.startGlobalHeartbeat();
+
+    // BACKUP AUTOMÁTICO: dispara backup com debounce após cada mudança nos dados
+    this.db.onDataChange.subscribe(() => {
+      if (this.db.initialized()) {
+        this.backupAuto.scheduleBackup();
+      }
+    });
 
     this.router.events.pipe(
       filter(event => 

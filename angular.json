@@ -22,11 +22,26 @@
               "src/assets",
               "src/manifest.webmanifest"
             ],
-            "serviceWorker": true
+            "serviceWorker": "ngsw-config.json"
           },
           "configurations": {
             "production": {
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": true,
+              "sourceMap": false,
+              "extractLicenses": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kb",
+                  "maximumError": "4kb"
+                }
+              ]
             },
             "development": {
               "optimization": false,

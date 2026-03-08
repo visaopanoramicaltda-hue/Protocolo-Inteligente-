@@ -196,11 +196,21 @@
                                     <!-- UNIT ROW -->
                                     <div class="flex items-center gap-2 mb-3">
                                         <span class="text-[8px] font-bold uppercase text-[#8a7a70] tracking-wider">UNIDADE:</span>
-                                        <div class="bg-[#EAE0D5] px-2 py-0.5 border border-[#d1c4b5]">
-                                            <span class="text-sm font-mono font-bold text-[#2a2320]">
-                                                {{ item.bloco || '?' }} - {{ item.apto || '?' }}
-                                            </span>
-                                        </div>
+                                        @if (item.bloco && item.apto) {
+                                            <button (click)="openUnitResidents(item.bloco, item.apto, $event)"
+                                                    class="bg-[#EAE0D5] px-2 py-0.5 border border-[#d1c4b5] hover:bg-[#E86C26] hover:text-white hover:border-[#b04b12] transition-colors group cursor-pointer rounded-sm"
+                                                    title="Ver moradores desta unidade">
+                                                <span class="text-sm font-mono font-bold text-[#2a2320] group-hover:text-white">
+                                                    {{ item.bloco }} - {{ item.apto }}
+                                                </span>
+                                            </button>
+                                        } @else {
+                                            <div class="bg-[#EAE0D5] px-2 py-0.5 border border-[#d1c4b5]">
+                                                <span class="text-sm font-mono font-bold text-[#2a2320]">
+                                                    {{ item.bloco || '?' }} - {{ item.apto || '?' }}
+                                                </span>
+                                            </div>
+                                        }
                                         
                                         @if (isOverdue(item) && item.status === 'PENDENTE') {
                                             <span class="text-[8px] font-black text-red-600 bg-red-50 border border-red-200 px-1 uppercase whitespace-nowrap">
@@ -599,3 +609,56 @@
       }
 
 </div>
+
+<!-- UNIT RESIDENTS MODAL -->
+@if (showUnitResidentsModal()) {
+  <div class="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-4 animate-[fadeIn_0.2s]"
+       (click)="closeUnitResidentsModal()">
+    <div class="bg-[#EAE0D5] border-2 border-[#2a2320] max-w-sm w-full shadow-2xl rounded-sm font-serif"
+         (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="bg-[#2a2320] px-4 py-3 flex items-center justify-between">
+        <div>
+          <p class="text-[10px] font-bold uppercase text-[#8a7a70] tracking-widest">Moradores da Unidade</p>
+          <h3 class="text-white font-black uppercase text-sm tracking-widest">
+            Bloco {{ unitResidentsData()?.bloco }} — Apto {{ unitResidentsData()?.apto }}
+          </h3>
+        </div>
+        <button (click)="closeUnitResidentsModal()" class="text-white/60 hover:text-white text-xl leading-none font-bold">✕</button>
+      </div>
+      <!-- Content -->
+      <div class="p-4">
+        @if ((unitResidentsData()?.all?.length || 0) === 0) {
+          <div class="text-center py-6">
+            <p class="text-2xl mb-2">🏠</p>
+            <p class="text-sm font-bold text-[#5c4d46] uppercase">Nenhum morador cadastrado</p>
+            <p class="text-xs text-[#8a7a70] mt-1">Acesse Admin → Moradores para cadastrar.</p>
+          </div>
+        } @else {
+          <ul class="space-y-2">
+            @for (m of unitResidentsData()?.all; track m.id) {
+              <li class="flex items-center gap-3 bg-white border border-[#d1c4b5] px-3 py-2 rounded-sm">
+                <div class="w-8 h-8 rounded-full bg-[#2a2320] flex items-center justify-center shrink-0">
+                  <span class="text-white font-black text-xs">{{ m.nome.charAt(0).toUpperCase() }}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-bold text-sm text-[#2a2320] uppercase truncate">{{ m.nome }}</p>
+                  @if (m.telefone) {
+                    <p class="text-[10px] text-[#8a7a70] font-mono">{{ m.telefone }}</p>
+                  }
+                </div>
+                @if (m.isPrincipal) {
+                  <span class="text-[8px] font-black uppercase bg-[#E86C26] text-white px-1.5 py-0.5 rounded-sm shrink-0">Principal</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </div>
+      <!-- Footer -->
+      <div class="px-4 pb-4">
+        <button (click)="closeUnitResidentsModal()" class="w-full py-2 bg-[#2a2320] text-white font-bold uppercase text-xs tracking-widest hover:bg-[#E86C26] transition-colors rounded-sm">Fechar</button>
+      </div>
+    </div>
+  </div>
+}

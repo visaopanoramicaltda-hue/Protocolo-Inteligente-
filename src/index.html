@@ -83,12 +83,15 @@
 
     .dark body { background-color: #050505; color: #f9fafb; }
 
-    /* CUSTOM SCROLLBARS (Mobile Friendly & Optimized) */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    /* CUSTOM SCROLLBARS - vertical oculto, horizontal visível */
+    ::-webkit-scrollbar { width: 0px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background-color: rgba(217, 119, 6, 0.5); border-radius: 10px; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Firefox: esconde scrollbar vertical, mantém horizontal quando necessário */
+    .overflow-y-auto, .overflow-y-scroll { scrollbar-width: none; }
+    .overflow-x-auto, .overflow-x-scroll { scrollbar-width: thin; scrollbar-color: rgba(217,119,6,0.5) transparent; }
 
     /* IOS INPUT ZOOM FIX */
     @media screen and (max-width: 768px) {
