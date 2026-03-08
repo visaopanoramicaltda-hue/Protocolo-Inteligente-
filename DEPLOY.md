@@ -105,7 +105,7 @@ O GitHub nunca mostra esses valores depois de salvos — nem para você.
 >
 > ❌ **Tela 1 — "Regras de branch" (Rulesets):** Se você clicou em **"Protect this branch"** ou vê campos como "Nome do conjunto de regras", "Filiais-alvo" — você está na tela errada. Clique **Voltar** no navegador.
 >
-> ❌ **Tela 2 — Configurações da sua conta pessoal:** Se você vê itens como "Perfil público", "Conta", "Aparência", "Notificações", "E-mails", "Senha e autenticação" — você está nas configurações do **seu perfil pessoal**, não do repositório. Isso é errado. Clique **Voltar** no navegador.
+> ❌ **Tela 2 — Configurações da sua conta pessoal:** Se você vê itens como "Perfil público", "Conta", "Aparência", "Acessibilidade", "Notificações", "E-mails", "Senha e autenticação", "Sessões", "Chaves SSH e GPG", "Organizações" — você está nas configurações do **seu perfil pessoal**, não do repositório. Isso é errado. Clique **Voltar** no navegador.
 >
 > ✅ **O "Settings" certo fica DENTRO DO REPOSITÓRIO**, não no menu do seu ícone de perfil.
 

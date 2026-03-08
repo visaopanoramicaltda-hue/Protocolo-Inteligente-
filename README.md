@@ -44,7 +44,7 @@
 >
 > ❌ **Tela 1 — "Regras de branch" (Rulesets):** Se você clicou em **"Protect this branch"**, você está na tela errada. Clique em **Voltar** no navegador.
 >
-> ❌ **Tela 2 — Configurações da sua conta pessoal:** Se você vê "Perfil público", "Conta", "Aparência", "Notificações" — você está nas configurações do **seu perfil**, não do repositório. Isso é errado. Clique em **Voltar** no navegador.
+> ❌ **Tela 2 — Configurações da sua conta pessoal:** Se você vê "Perfil público", "Conta", "Aparência", "Acessibilidade", "Notificações", "E-mails", "Senha e autenticação", "Sessões" — você está nas configurações do **seu perfil**, não do repositório. Isso é errado. Clique em **Voltar** no navegador.
 >
 > ✅ **O "Settings" certo fica DENTRO DO REPOSITÓRIO**, não no seu perfil pessoal.
 
