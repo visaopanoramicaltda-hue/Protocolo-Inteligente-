@@ -26,7 +26,7 @@ type Tab = 'dashboard' | 'porteiros' | 'moradores' | 'transportadoras' | 'encome
 type SettingsSubTab = 'ENGINE' | 'POLICY' | 'QUEUE';
 type DocType = 'NONE' | 'FEATURES' | 'MANUAL' | 'CUSTOM_REPORT' | 'AUDIT_LOG';
 type FolderAnimState = 'NONE' | 'SAVING' | 'RESTORING';
-type ReportType = 'ENCOMENDAS' | 'PORTEIROS' | 'MORADORES' | 'ENTREGADORES';
+type ReportType = 'ENCOMENDAS' | 'PORTEIROS' | 'MORADORES' | 'ENTREGADORES' | 'LOGS';
 
 @Component({
   selector: 'app-admin-hub',
@@ -1309,6 +1309,20 @@ export class AdminHubComponent implements OnInit, OnDestroy {
           } else if (type === 'ENTREGADORES') {
               const carriers = this.db.carriers();
               result = await this.pdf.generateTransportadorasReport(carriers, user);
+
+          } else if (type === 'LOGS') {
+              let logs = this.db.logs();
+              const startDate = this.reportStartDate() ? new Date(this.reportStartDate() + 'T00:00:00') : new Date(0);
+              const endDate = this.reportEndDate() ? new Date(this.reportEndDate() + 'T23:59:59') : new Date(8640000000000000);
+              logs = logs.filter(l => {
+                  const d = new Date(l.timestamp);
+                  return d >= startDate && d <= endDate;
+              });
+              if (logs.length === 0) {
+                  this.ui.show('Nenhuma ação registrada no período.', 'WARNING');
+                  return;
+              }
+              result = await this.pdf.generateAuditLogReport(logs, user);
           }
 
           if (result) {

@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "scripts": {
     "start": "node server.js",
-    "build": "ng build --configuration production"
+    "build": "ng build --configuration production",
+    "build:zip": "ng build --configuration production && node scripts/package-zip.js",
+    "deploy": "ng build --configuration production && firebase deploy --only hosting"
   },
   "dependencies": {
     "express": "^4.18.2",

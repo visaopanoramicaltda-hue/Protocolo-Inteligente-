@@ -1,6 +1,6 @@
 
 import { Injectable, inject } from '@angular/core';
-import { Encomenda, Porteiro, DbService, Morador } from './db.service';
+import { Encomenda, Porteiro, DbService, Morador, SystemLog } from './db.service';
 import { UiService } from './ui.service';
 import { jsPDF } from 'jspdf';
 
@@ -512,4 +512,91 @@ export class PdfService {
   public async generatePorteirosReport(users: Porteiro[], requester: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> { return { blob: new Blob(), url: '', hash: '' }; }
   public async generateMoradoresReport(residents: Morador[], requester: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> { return { blob: new Blob(), url: '', hash: '' }; }
   public async generateTransportadorasReport(carriers: string[], requester: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> { return { blob: new Blob(), url: '', hash: '' }; }
+
+  public async generateAuditLogReport(logs: SystemLog[], requester: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> {
+    const doc = new jsPDF();
+    const PAGE_WIDTH = 210;
+    const MARGIN = 15;
+
+    // Header
+    doc.setFillColor(this.COLOR_DARK_BG[0], this.COLOR_DARK_BG[1], this.COLOR_DARK_BG[2]);
+    doc.rect(0, 0, PAGE_WIDTH, 35, 'F');
+    doc.setFillColor(this.COLOR_ORANGE[0], this.COLOR_ORANGE[1], this.COLOR_ORANGE[2]);
+    doc.rect(0, 35, PAGE_WIDTH, 2, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('SIMBIOSE', MARGIN, 15);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(200, 200, 200);
+    doc.text('RELATÓRIO DE AUDITORIA – AÇÕES DO SISTEMA', MARGIN, 22);
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('AUDITORIA', PAGE_WIDTH - MARGIN, 14, { align: 'right' });
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(200, 200, 200);
+    doc.text(`Emissão: ${new Date().toLocaleString('pt-BR')}`, PAGE_WIDTH - MARGIN, 20, { align: 'right' });
+    doc.text(`Gerado por: ${requester.nome}`, PAGE_WIDTH - MARGIN, 26, { align: 'right' });
+
+    let y = 44;
+
+    // Table header
+    const colWidths = [38, 25, 22, 95];
+    const colX = [MARGIN, MARGIN + colWidths[0], MARGIN + colWidths[0] + colWidths[1], MARGIN + colWidths[0] + colWidths[1] + colWidths[2]];
+
+    doc.setFillColor(232, 108, 38);
+    doc.rect(MARGIN, y, PAGE_WIDTH - MARGIN * 2, 8, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DATA / HORA', colX[0] + 2, y + 5.5);
+    doc.text('USUÁRIO', colX[1] + 2, y + 5.5);
+    doc.text('AÇÃO', colX[2] + 2, y + 5.5);
+    doc.text('DETALHES', colX[3] + 2, y + 5.5);
+    y += 10;
+
+    // Table rows
+    doc.setFont('helvetica', 'normal');
+    let rowAlt = false;
+    for (const log of logs) {
+        if (y > 270) {
+            doc.addPage();
+            y = 20;
+        }
+        if (rowAlt) {
+            doc.setFillColor(245, 245, 245);
+            doc.rect(MARGIN, y - 1, PAGE_WIDTH - MARGIN * 2, 7, 'F');
+        }
+        rowAlt = !rowAlt;
+        doc.setTextColor(40, 40, 40);
+        doc.setFontSize(6.5);
+        const dateStr = new Date(log.timestamp).toLocaleString('pt-BR');
+        doc.text(dateStr, colX[0] + 1, y + 4);
+        doc.text((log.userName || '').substring(0, 14), colX[1] + 1, y + 4);
+        doc.text((log.action || '').substring(0, 10), colX[2] + 1, y + 4);
+        const detailLines = doc.splitTextToSize((log.details || '').substring(0, 120), colWidths[3] - 4);
+        doc.text(detailLines[0] || '', colX[3] + 1, y + 4);
+        y += 7;
+    }
+
+    // Footer
+    const totalPages = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Simbiose • Auditoria • Página ${i}/${totalPages}`, PAGE_WIDTH / 2, 290, { align: 'center' });
+    }
+
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const arrayBuffer = await blob.arrayBuffer();
+    const hash = await this.gerarHash(arrayBuffer);
+    return { blob, url, hash };
+  }
 }

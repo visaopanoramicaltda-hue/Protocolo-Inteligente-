@@ -16,17 +16,21 @@
               "base": "./dist",
               "browser": "."
             },
+            "index": "src/index.html",
             "browser": "index.tsx",
             "tsConfig": "tsconfig.json",
             "assets": [
               "src/assets",
               "src/manifest.webmanifest"
             ],
-            "serviceWorker": true
+            "serviceWorker": "ngsw-config.json"
           },
           "configurations": {
             "production": {
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": true,
+              "sourceMap": false,
+              "namedChunks": false
             },
             "development": {
               "optimization": false,

@@ -141,6 +141,8 @@ export class DbService {
   // CHAVE MESTRA PARA BACKUP AUTOMÁTICO (SOBRESCRITA)
   private readonly AUTO_BACKUP_KEY = 999999999; 
 
+  private autoBackupTimer: any = null; // Debounce timer for auto-backup
+
   private readonly MASTER_CARRIERS_DATASET = ["CORREIOS", "SEDEX", "JADLOG", "LOGGI", "MERCADO LIVRE", "AMAZON", "MAGALU", "SHOPEE", "FEDEX", "DHL", "TNT", "AZUL CARGO", "TOTAL EXPRESS", "BRASPRESS"]; 
   private readonly DEFAULT_SENDERS = ["Caixa", "Banco do Brasil", "Itaú", "Nubank", "Detran", "Receita Federal", "Enel", "Sabesp", "Vivo", "Claro", "Tim", "Unimed"];
 
@@ -154,6 +156,11 @@ export class DbService {
   
   private notifyChange() {
       this.onDataChange.next();
+      // Auto-backup com debounce de 2s para não sobrecarregar em ações rápidas
+      if (this.autoBackupTimer) clearTimeout(this.autoBackupTimer);
+      this.autoBackupTimer = setTimeout(() => {
+          this.saveManualBackupToVirtualFolder(true).catch(() => {});
+      }, 2000);
   }
 
   private emitDbEvent(type: 'CREATE' | 'UPDATE' | 'DELETE', store: DbStoreName, data: any, id: string) {

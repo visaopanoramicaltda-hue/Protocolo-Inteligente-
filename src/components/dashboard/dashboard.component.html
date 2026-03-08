@@ -119,8 +119,8 @@
       <!-- === ZONA DE ROLAGEM (LISTA DE CARDS) === -->
       <!-- PERFORMANCE: 'will-change: scroll-position' avisa o browser para otimizar o scroll -->
       <!-- UI TWEAK: 'no-scrollbar' para visual limpo -->
-      <!-- LAYOUT FIX: 'pb-48' adicionado para garantir que o último card role ACIMA do rodapé fixo -->
-      <div #cardsContainer class="flex-1 overflow-y-auto overflow-x-hidden min-h-0 relative no-scrollbar bg-[#e8e4dc] pb-48" style="will-change: scroll-position;"> 
+      <!-- LAYOUT: overflow-y-hidden para remover rolagem vertical; overflow-x-hidden contém o grid interno -->
+      <div #cardsContainer class="flex-1 overflow-y-hidden overflow-x-hidden min-h-0 relative no-scrollbar bg-[#e8e4dc]" style="will-change: scroll-position;"> 
           
           <!-- LIST VIEW (CARDS DETALHADOS) -->
           @if (viewMode() === 'LIST') {
@@ -133,7 +133,7 @@
                 </div>
             } @else {
               <!-- Horizontal Scroll Container (Grid Flow Col) -->
-              <div class="px-4 py-6 grid grid-flow-col auto-cols-[90vw] md:auto-cols-[400px] gap-4 snap-x snap-mandatory overflow-x-auto pb-4 content-start">
+              <div class="px-4 py-6 grid grid-flow-col auto-cols-[90vw] md:auto-cols-[400px] gap-4 snap-x snap-mandatory overflow-x-auto overflow-y-hidden pb-4 content-start no-scrollbar h-full">
                   
                   @for(item of filteredEncomendas(); track item.id) {
                         <!-- THE CARD (CLASSIC HORIZONTAL LAYOUT) -->

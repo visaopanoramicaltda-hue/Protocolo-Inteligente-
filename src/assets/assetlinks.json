@@ -4,7 +4,7 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.seuusuario.simbiose",
+      "package_name": "br.com.simbiose.protocolo",
       "sha256_cert_fingerprints": [
         "COLE_AQUI_O_SHA256_DA_PLAY_STORE"
       ]
