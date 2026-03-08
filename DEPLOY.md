@@ -11,11 +11,12 @@
 |---|---|---|
 | 1 | Criar projeto no Firebase | ✅ Feito |
 | 2 | Ativar Firebase Hosting | ✅ Feito |
-| **3** | **Descobrir o ID do projeto** | ← **Você está aqui** |
+| **2B** | **⚠️ Mesclar (merge) este PR para main** | ← **Faça isso PRIMEIRO** |
+| **3** | **Descobrir o ID do projeto** | |
 | 4 | Gerar chave da Service Account | |
 | 5 | Obter chave da API Gemini | |
 | 6 | Cadastrar os 4 secrets no GitHub | |
-| 7 | Fazer push para disparar o deploy | |
+| 7 | Disparar o deploy | |
 
 ---
 
@@ -28,6 +29,22 @@ Você criou o projeto Firebase. Prossiga para o Passo 3.
 ## ✅ Passo 2 — Ativar Firebase Hosting  *(já feito)*
 
 Você clicou em "Hospedagem" e seguiu o assistente. Ótimo!
+
+---
+
+## ⚠️ Passo 2B — Mesclar este PR para a branch main  *(faça antes dos outros passos)*
+
+O pipeline de deploy e todas as configurações estão neste PR.
+Enquanto este PR não for mesclado, o botão **"Run workflow"** não aparece na aba Actions.
+
+**Como mesclar:**
+
+1. Vá para a página do PR no GitHub
+2. Se o PR estiver marcado como **Draft**, clique em **"Ready for review"** primeiro
+3. Clique no botão verde **"Merge pull request"** → **"Confirm merge"**
+4. Pronto! Agora continue com o Passo 3 ↓
+
+---
 
 ---
 
@@ -227,7 +244,9 @@ MERCADO_PAGO_TOKEN         ✅
 
 ## 🚀 Passo 7 — Disparar o deploy
 
-Após cadastrar os 4 secrets, **dispare o deploy manualmente** assim:
+> ⚠️ **Pré-requisito:** Este passo só funciona após mesclar o PR (Passo 2B). Se o workflow **"Deploy to Firebase Hosting"** não aparecer no menu lateral, é porque o PR ainda não foi mesclado.
+
+Após mesclar o PR e cadastrar os 4 secrets, **dispare o deploy manualmente** assim:
 
 1. No repositório, clique na aba **"Actions"** (menu horizontal superior)
 2. No menu lateral esquerdo, clique em **"Deploy to Firebase Hosting"**
@@ -260,6 +279,8 @@ _(substitua `SEU-PROJETO-ID` pelo ID que você anotou no Passo 3 — é o mesmo 
 
 | O que aparece | O que fazer |
 |---|---|
+| "Deploy to Firebase Hosting" **não aparece** na aba Actions | O PR ainda não foi mesclado — faça o merge (Passo 2B) primeiro |
+| Botão **"Run workflow"** não aparece | O PR não foi mesclado, ou você está vendo um branch diferente de `main` — mescle o PR primeiro |
 | `Error: Failed to authenticate` | O secret `FIREBASE_SERVICE_ACCOUNT` está errado — delete-o e recrie com o conteúdo **completo** do `.json` |
 | `Error: Project 'your-project-id' not found` | O `FIREBASE_PROJECT_ID` está como `your-project-id` — corrija com o ID real |
 | `Build failed` — erro de TypeScript | Falta alguma dependência; verifique os logs na aba Actions |

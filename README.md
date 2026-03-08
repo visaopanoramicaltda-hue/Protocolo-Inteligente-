@@ -11,6 +11,22 @@
 > ✅ Passos 1 e 2 já concluídos (projeto Firebase criado e Hosting ativado).
 > Siga os passos abaixo em ordem. Leva cerca de 15 minutos.
 
+---
+
+### 👉 Passo 2B — ⚠️ Mesclar este PR antes de tudo
+
+> ⚠️ **IMPORTANTE — faça isso PRIMEIRO antes dos outros passos!**
+>
+> O pipeline de deploy ainda está neste PR e **ainda não chegou na branch `main`** do repositório.
+> Enquanto este PR não for mesclado, o botão **"Run workflow"** não aparecerá na aba Actions.
+
+1. Vá para a página deste PR no GitHub (você já está nela se estiver lendo isso no PR)
+2. Se o PR estiver marcado como **Draft**, clique em **"Ready for review"** primeiro
+3. Clique no botão verde **"Merge pull request"** → **"Confirm merge"**
+4. Pronto! Agora continue com o Passo 3 abaixo ↓
+
+---
+
 ### 👉 Passo 3 — Descobrir o ID do projeto Firebase
 
 1. Abra **[console.firebase.google.com](https://console.firebase.google.com/)** no celular ou computador
@@ -73,6 +89,8 @@ Após preencher cada linha, toque no botão verde **"Adicionar segredo"**.
 ---
 
 ### 👉 Passo 7 — Disparar o deploy
+
+> ⚠️ Este passo só funciona **depois de mesclar o PR** (Passo 2B acima).
 
 Após cadastrar os 4 secrets:
 1. Vá na aba **"Actions"** do repositório
