@@ -11,6 +11,7 @@
     "start": "node server.js",
     "build": "ng build --configuration production",
     "build:zip": "ng build --configuration production && node scripts/package-zip.js",
+    "predeploy": "node scripts/check-firebase-config.js",
     "deploy": "ng build --configuration production && firebase deploy --only hosting",
     "preview": "npm run build && vite preview --outDir dist"
   },
