@@ -40,7 +40,18 @@
 
 ### 👉 Passo 6 — Cadastrar as 4 chaves no GitHub (Secrets)
 
-Acesse: **Settings** (menu superior do repositório) → **Secrets and variables** → **Actions** → **New repository secret**
+> ⚠️ **ATENÇÃO — tela errada comum:**
+> Se você viu o aviso **"Your main branch isn't protected"** e clicou em **"Protect this branch"**,
+> você foi parar numa tela de **regras de branch** — isso **não é para o deploy**.
+> Clique em **← Back** ou no navegador no botão **Voltar** para sair dessa tela.
+
+**Para chegar na tela certa, siga exatamente:**
+
+1. Acesse o repositório: `https://github.com/visaopanoramicaltda-hue/Protocolo-Inteligente-`
+2. Role até o menu horizontal superior e clique em **"Settings"** _(fica depois de "Insights")_
+3. No menu **lateral esquerdo**, procure a seção **"Security"** e clique em **"Secrets and variables"**
+4. No submenu que abrir, clique em **"Actions"**
+5. Você verá a página **"Actions secrets and variables"** — clique no botão verde **"New repository secret"**
 
 Crie um secret de cada vez com estes nomes e valores:
 

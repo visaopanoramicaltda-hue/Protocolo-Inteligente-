@@ -101,6 +101,11 @@ Esta chave ativa as funcionalidades de IA do app.
 Aqui você "ensina" o GitHub quais são suas senhas/chaves, de forma segura.
 O GitHub nunca mostra esses valores depois de salvos — nem para você.
 
+> ⚠️ **ATENÇÃO — armadilha comum:**
+> Se você viu o aviso **"Your main branch isn't protected"** e clicou em **"Protect this branch"**,
+> você foi parar na tela de **regras de branch (Rulesets)** — isso **não é para o deploy**.
+> Clique no botão **Voltar** do navegador para sair e então siga os passos abaixo.
+
 **Como acessar a tela de Secrets:**
 
 1. Acesse seu repositório no GitHub:
@@ -109,7 +114,7 @@ O GitHub nunca mostra esses valores depois de salvos — nem para você.
 2. Clique na aba **"Settings"** (Configurações) — fica no menu horizontal superior do repositório
    _(se não aparecer, você precisa ser Admin do repositório)_
 
-3. No menu **lateral esquerdo**, clique em **"Secrets and variables"**
+3. No menu **lateral esquerdo**, procure a seção **"Security"** e clique em **"Secrets and variables"**
    → Clique em **"Actions"** no submenu que aparecer
 
 4. Você verá a página **"Actions secrets and variables"**
