@@ -101,20 +101,25 @@ Esta chave ativa as funcionalidades de IA do app.
 Aqui você "ensina" o GitHub quais são suas senhas/chaves, de forma segura.
 O GitHub nunca mostra esses valores depois de salvos — nem para você.
 
-> ⚠️ **ATENÇÃO — armadilha comum:**
-> Se você viu o aviso **"Your main branch isn't protected"** e clicou em **"Protect this branch"**,
-> você foi parar na tela de **regras de branch (Rulesets)** — isso **não é para o deploy**.
-> Clique no botão **Voltar** do navegador para sair e então siga os passos abaixo.
+> ⚠️ **ATENÇÃO — duas telas erradas comuns:**
+>
+> ❌ **Tela 1 — "Regras de branch" (Rulesets):** Se você clicou em **"Protect this branch"** ou vê campos como "Nome do conjunto de regras", "Filiais-alvo" — você está na tela errada. Clique **Voltar** no navegador.
+>
+> ❌ **Tela 2 — Configurações da sua conta pessoal:** Se você vê itens como "Perfil público", "Conta", "Aparência", "Notificações", "E-mails", "Senha e autenticação" — você está nas configurações do **seu perfil pessoal**, não do repositório. Isso é errado. Clique **Voltar** no navegador.
+>
+> ✅ **O "Settings" certo fica DENTRO DO REPOSITÓRIO**, não no menu do seu ícone de perfil.
 
 **Como acessar a tela de Secrets:**
 
-1. Acesse seu repositório no GitHub:
+1. Acesse **diretamente** o repositório:
    `https://github.com/visaopanoramicaltda-hue/Protocolo-Inteligente-`
+   _(você deve ver arquivos do projeto: `README.md`, `package.json`, etc.)_
 
-2. Clique na aba **"Settings"** (Configurações) — fica no menu horizontal superior do repositório
+2. Nessa tela do repositório, role o menu horizontal e clique em **"Settings"** _(fica após "Insights")_
+   _(Atenção: é o "Settings" do repositório, NÃO o do seu ícone/foto de perfil)_
    _(se não aparecer, você precisa ser Admin do repositório)_
 
-3. No menu **lateral esquerdo**, procure a seção **"Security"** e clique em **"Secrets and variables"**
+3. No menu **lateral esquerdo**, desça até a seção **"Security"** e clique em **"Secrets and variables"**
    → Clique em **"Actions"** no submenu que aparecer
 
 4. Você verá a página **"Actions secrets and variables"**

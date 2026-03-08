@@ -40,18 +40,23 @@
 
 ### 👉 Passo 6 — Cadastrar as 4 chaves no GitHub (Secrets)
 
-> ⚠️ **ATENÇÃO — tela errada comum:**
-> Se você viu o aviso **"Your main branch isn't protected"** e clicou em **"Protect this branch"**,
-> você foi parar numa tela de **regras de branch** — isso **não é para o deploy**.
-> Clique em **← Back** ou no navegador no botão **Voltar** para sair dessa tela.
+> ⚠️ **ATENÇÃO — duas telas erradas comuns:**
+>
+> ❌ **Tela 1 — "Regras de branch" (Rulesets):** Se você clicou em **"Protect this branch"**, você está na tela errada. Clique em **Voltar** no navegador.
+>
+> ❌ **Tela 2 — Configurações da sua conta pessoal:** Se você vê "Perfil público", "Conta", "Aparência", "Notificações" — você está nas configurações do **seu perfil**, não do repositório. Isso é errado. Clique em **Voltar** no navegador.
+>
+> ✅ **O "Settings" certo fica DENTRO DO REPOSITÓRIO**, não no seu perfil pessoal.
 
 **Para chegar na tela certa, siga exatamente:**
 
-1. Acesse o repositório: `https://github.com/visaopanoramicaltda-hue/Protocolo-Inteligente-`
-2. Role até o menu horizontal superior e clique em **"Settings"** _(fica depois de "Insights")_
-3. No menu **lateral esquerdo**, procure a seção **"Security"** e clique em **"Secrets and variables"**
-4. No submenu que abrir, clique em **"Actions"**
-5. Você verá a página **"Actions secrets and variables"** — clique no botão verde **"New repository secret"**
+1. Acesse **diretamente** o repositório: `https://github.com/visaopanoramicaltda-hue/Protocolo-Inteligente-`
+   _(você deve ver o código do projeto, com arquivos como `README.md`, `package.json`, etc.)_
+2. Nessa mesma tela do repositório, role o menu horizontal e toque em **"Settings"** _(fica após "Insights")_
+   _(Atenção: é o "Settings" que aparece no menu do repositório, não o do seu ícone de perfil)_
+3. No menu **lateral esquerdo**, desça até **"Security"** e toque em **"Secrets and variables"**
+4. No submenu que abrir, toque em **"Actions"**
+5. Toque no botão verde **"New repository secret"**
 
 Crie um secret de cada vez com estes nomes e valores:
 
