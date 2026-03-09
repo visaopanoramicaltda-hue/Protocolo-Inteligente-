@@ -21,6 +21,7 @@ import { QuantumNetComponent } from '../quantum-net/quantum-net.component';
 import { DeepSeekService } from '../../services/deep-seek.service'; 
 import { DeviceContactService } from '../../services/device-contact.service';
 import { jsPDF } from 'jspdf';
+import JSZip from 'jszip';
 
 type Tab = 'dashboard' | 'porteiros' | 'moradores' | 'transportadoras' | 'encomendas' | 'correspondencias' | 'relatorios' | 'logs' | 'sistema' | 'backup' | 'suporte' | 'termos' | 'quantum' | 'deepseek' | 'inbox' | 'network'; 
 type SettingsSubTab = 'ENGINE' | 'POLICY' | 'QUEUE';
@@ -1074,7 +1075,62 @@ export class AdminHubComponent implements OnInit, OnDestroy {
           URL.revokeObjectURL(url);
       });
   }
-  
+
+  async baixarProjetoZip() {
+      this.ui.show('Gerando arquivo ZIP...', 'INFO');
+      try {
+          const data = await this.db.exportData();
+          const zip = new JSZip();
+
+          // 1. Full JSON backup
+          zip.file('backup_completo.json', JSON.stringify(data, null, 2));
+
+          // 2. Porteiros CSV
+          const porteiros = data.porteiros || [];
+          const porteiroCsv = '\uFEFFNOME,CPF,ADMIN\n' + porteiros.map(p =>
+              `"${(p.nome || '').replace(/"/g, '""')}","${p.cpf || ''}",${p.isAdmin ? 'SIM' : 'NÃO'}`
+          ).join('\n');
+          zip.file('porteiros.csv', porteiroCsv);
+
+          // 3. Moradores CSV
+          const moradores = data.moradores || [];
+          const moradorCsv = '\uFEFFNOME,BLOCO,APTO,TELEFONE\n' + moradores.map(m =>
+              `"${(m.nome || '').replace(/"/g, '""')}","${m.bloco || ''}","${m.apto || ''}","${m.telefone || ''}"`
+          ).join('\n');
+          zip.file('moradores.csv', moradorCsv);
+
+          // 4. Encomendas CSV
+          const encomendas = data.encomendas || [];
+          const encomendaCsv = '\uFEFFDESTINATARIO,BLOCO,APTO,TRANSPORTADORA,RASTREIO,STATUS,DATA_ENTRADA,DATA_SAIDA\n' + encomendas.map(e =>
+              `"${(e.destinatarioNome || '').replace(/"/g, '""')}","${e.bloco || ''}","${e.apto || ''}","${e.transportadora || ''}","${e.codigoRastreio || ''}","${e.status || ''}","${e.dataEntrada || ''}","${e.dataSaida || ''}"`
+          ).join('\n');
+          zip.file('encomendas.csv', encomendaCsv);
+
+          // 5. Logs CSV (from signals, may include current session)
+          const logs = this.db.logs ? this.db.logs() : [];
+          if (logs.length > 0) {
+              const logsCsv = '\uFEFFDATA,USUARIO,ACAO,DETALHES\n' + logs.map(l => {
+                  const date = new Date(l.timestamp).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'medium' });
+                  const cleanDetails = l.details ? `"${l.details.replace(/"/g, '""')}"` : '""';
+                  return `"${date}","${(l.userName || '').replace(/"/g, '""')}","${l.action}",${cleanDetails}`;
+              }).join('\n');
+              zip.file('auditoria.csv', logsCsv);
+          }
+
+          const blob = await zip.generateAsync({ type: 'blob' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `protocolo_inteligente_${Date.now()}.zip`;
+          a.click();
+          URL.revokeObjectURL(url);
+          this.ui.show('Projeto baixado com sucesso!', 'SUCCESS');
+      } catch (e) {
+          console.error('Erro ao gerar ZIP:', e);
+          this.ui.show('Erro ao gerar arquivo ZIP.', 'ERROR');
+      }
+  }
+
   async startSmartRestore() {
       if (this.auth.isGuestSession()) {
           this.ui.show('ACESSO NEGADO: Restauração proibida para o usuário 000000. Use um Administrador Real.', 'ERROR');
