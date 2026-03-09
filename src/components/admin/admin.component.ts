@@ -1110,9 +1110,9 @@ export class AdminHubComponent implements OnInit, OnDestroy {
           const logs = this.db.logs ? this.db.logs() : [];
           if (logs.length > 0) {
               const logsCsv = '\uFEFFDATA,USUARIO,ACAO,DETALHES\n' + logs.map(l => {
-                  const date = new Date(l.timestamp).toLocaleString('pt-BR');
-                  const cleanDetails = l.details ? `"${l.details.replace(/"/g, '""')}"` : '';
-                  return `${date},"${(l.userName || '').replace(/"/g, '""')}",${l.action},${cleanDetails}`;
+                  const date = new Date(l.timestamp).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'medium' });
+                  const cleanDetails = l.details ? `"${l.details.replace(/"/g, '""')}"` : '""';
+                  return `"${date}","${(l.userName || '').replace(/"/g, '""')}","${l.action}",${cleanDetails}`;
               }).join('\n');
               zip.file('auditoria.csv', logsCsv);
           }
