@@ -10,8 +10,10 @@ steps:
     args:
       - '-c'
       - |
-        sed -i "s|geminiApiKey: ''|geminiApiKey: '$$GEMINI_API_KEY'|" src/environments/environment.prod.ts
-        sed -i "s|mercadoPagoAccessToken: ''|mercadoPagoAccessToken: '$$MERCADO_PAGO_TOKEN'|" src/environments/environment.prod.ts
+        ESCAPED_KEY=$(printf '%s' "$$GEMINI_API_KEY" | sed 's/[&/\|]/\\&/g')
+        ESCAPED_TOKEN=$(printf '%s' "$$MERCADO_PAGO_TOKEN" | sed 's/[&/\|]/\\&/g')
+        sed -i "s|geminiApiKey: ''|geminiApiKey: '$${ESCAPED_KEY}'|" src/environments/environment.prod.ts
+        sed -i "s|mercadoPagoAccessToken: ''|mercadoPagoAccessToken: '$${ESCAPED_TOKEN}'|" src/environments/environment.prod.ts
     secretEnv: ['GEMINI_API_KEY', 'MERCADO_PAGO_TOKEN']
 
   # Build de produção

@@ -107,14 +107,16 @@ GEMINI_API_KEY="${GEMINI_API_KEY:-}"
 MERCADO_PAGO_TOKEN="${MERCADO_PAGO_TOKEN:-}"
 
 if [ -n "$GEMINI_API_KEY" ]; then
-  sed -i "s|geminiApiKey: ''|geminiApiKey: '$GEMINI_API_KEY'|" src/environments/environment.prod.ts
+  ESCAPED_KEY=$(printf '%s' "$GEMINI_API_KEY" | sed 's/[&/\|]/\\&/g')
+  sed -i "s|geminiApiKey: ''|geminiApiKey: '${ESCAPED_KEY}'|" src/environments/environment.prod.ts
   ok "GEMINI_API_KEY injetada"
 else
   warn "GEMINI_API_KEY não definida — usando valor vazio"
 fi
 
 if [ -n "$MERCADO_PAGO_TOKEN" ]; then
-  sed -i "s|mercadoPagoAccessToken: ''|mercadoPagoAccessToken: '$MERCADO_PAGO_TOKEN'|" src/environments/environment.prod.ts
+  ESCAPED_TOKEN=$(printf '%s' "$MERCADO_PAGO_TOKEN" | sed 's/[&/\|]/\\&/g')
+  sed -i "s|mercadoPagoAccessToken: ''|mercadoPagoAccessToken: '${ESCAPED_TOKEN}'|" src/environments/environment.prod.ts
   ok "MERCADO_PAGO_TOKEN injetado"
 else
   warn "MERCADO_PAGO_TOKEN não definido — usando valor vazio"
