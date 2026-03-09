@@ -1,5 +1,5 @@
 
-import { Component, inject, signal, computed, effect, ViewChild, ElementRef, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, effect, ViewChild, ElementRef, OnDestroy, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DbService, Porteiro, Morador, AppConfig, Encomenda, SystemLog, InboxMessage } from '../../services/db.service';
@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { UiService } from '../../services/ui.service';
 import { GoogleDriveService } from '../../services/google-drive.service';
 import { DataProtectionService } from '../../services/data-protection.service';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GeminiService } from '../../services/gemini.service';
 import { PdfService } from '../../services/pdf.service';
 import { SimbiosePolicyEngine, FuncaoUsuario, AcaoSistema } from '../../services/core/simbiose-policy.service';
@@ -31,7 +31,7 @@ type ReportType = 'ENCOMENDAS' | 'PORTEIROS' | 'MORADORES' | 'ENTREGADORES';
 
 @Component({
   selector: 'app-admin-hub',
-  imports: [CommonModule, FormsModule, RouterLink, DatePipe, QuantumNetComponent],
+  imports: [CommonModule, FormsModule, DatePipe, QuantumNetComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush, 
   templateUrl: './admin.component.html',
@@ -75,7 +75,6 @@ export class AdminHubComponent implements OnInit, OnDestroy {
   deepSeek = inject(DeepSeekService);
   contactService = inject(DeviceContactService); 
   private backPress = inject(BackPressService);
-  private cdRef = inject(ChangeDetectorRef);
   private hashService = inject(SimbioseHashService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -92,6 +91,12 @@ export class AdminHubComponent implements OnInit, OnDestroy {
   
   // RESTORE STATE
   isRestoring = signal(false);
+
+  // Simbiose Pipeline Test State
+  isSimbioseTestRunning = signal(false);
+  simbioseTestLog = signal<string[]>([]);
+  simbioseTestPassed = signal(false);
+  simbioseTestElapsedMs = signal(0);
 
   // Modal States
   showPorteiroModal = signal(false);
@@ -1254,6 +1259,29 @@ export class AdminHubComponent implements OnInit, OnDestroy {
 
   testarAutomacao() {
       this.deepSeek.simularNotificacaoAtraso();
+  }
+
+  async runSimbioseTest() {
+      if (this.isSimbioseTestRunning()) return;
+      this.isSimbioseTestRunning.set(true);
+      this.simbioseTestLog.set([]);
+      this.simbioseTestPassed.set(false);
+      this.simbioseTestElapsedMs.set(0);
+      try {
+          const { result, elapsedMs, log } = await this.gemini.simulateFullPipeline();
+          this.simbioseTestLog.set(log);
+          this.simbioseTestElapsedMs.set(elapsedMs);
+          const passed = !!(result.destinatario && result.transportadora && elapsedMs < 5000);
+          this.simbioseTestPassed.set(passed);
+          const matchInfo = result.matchedMoradorId ? '✓ Match DB' : '⚡ OCR Direto';
+          this.ui.show(`Teste ${passed ? 'OK' : 'FALHOU'} — ${(elapsedMs / 1000).toFixed(2)}s — ${matchInfo}`, passed ? 'SUCCESS' : 'ERROR');
+      } catch (e) {
+          this.simbioseTestLog.set([`ERRO: ${(e as any)?.message || e}`]);
+          this.simbioseTestPassed.set(false);
+          this.ui.show('Erro no teste. Veja o log.', 'ERROR');
+      } finally {
+          this.isSimbioseTestRunning.set(false);
+      }
   }
 
   async generateReport() {

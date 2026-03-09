@@ -1,6 +1,6 @@
 
 import { Component, inject, signal, computed, ViewChild, ElementRef, AfterViewInit, OnDestroy, effect, ChangeDetectionStrategy, ChangeDetectorRef, NgZone } from '@angular/core';
-import { CommonModule, DatePipe, PercentPipe, DecimalPipe } from '@angular/common';
+import { CommonModule, PercentPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DbService, Encomenda, Morador } from '../../services/db.service';
@@ -14,7 +14,7 @@ import { ExclusiveScannerService } from '../../services/exclusive-scanner.servic
 @Component({
   selector: 'app-package-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, PercentPipe, DecimalPipe],
+  imports: [CommonModule, FormsModule, PercentPipe, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './package-form.component.html'
 })
@@ -109,6 +109,10 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
   
   scanStartTime = signal<number | null>(null);
   scanDuration = signal<number | null>(null);
+
+  // Demo/Test scan state
+  isDemoScanning = signal(false);
+  lastDemoLog = signal<string[]>([]);
 
   geminiStatus = computed(() => this.gemini.geminiApiStatus());
 
@@ -513,6 +517,23 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
       });
   }
 
+  // Native BarcodeDetector instance (lazy-initialized for performance)
+  private barcodeDetector: any = null;
+  private barcodeDetectorReady = false;
+
+  private async initBarcodeDetector() {
+      if (this.barcodeDetectorReady) return;
+      try {
+          if ('BarcodeDetector' in window) {
+              this.barcodeDetector = new (window as any).BarcodeDetector({ formats: ['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8', 'data_matrix'] });
+          }
+      } catch (e) {
+          console.warn('[Simbiose] BarcodeDetector não disponível neste dispositivo:', e);
+          this.barcodeDetector = null;
+      }
+      this.barcodeDetectorReady = true;
+  }
+
   private processFrame() {
       // Immediate exit if we started processing
       if (this.isProcessingScan()) return;
@@ -548,8 +569,26 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
   private async detectAndCapture(canvas: HTMLCanvasElement) {
       if (this.isAutoCapturing() || this.isProcessingScan()) return;
       
+      // NATIVE QR / BARCODE DETECTION (runs before stabilization)
+      if (!this.barcodeDetectorReady) await this.initBarcodeDetector();
+      if (this.barcodeDetector && !this.qrCodeScanned()) {
+          try {
+              const codes = await this.barcodeDetector.detect(canvas);
+              if (codes && codes.length > 0) {
+                  const firstCode = codes[0].rawValue as string;
+                  if (firstCode) {
+                      this.qrCodeScanned.set(firstCode);
+                      // Fill the tracking field immediately with the native QR result
+                      this.ngZone.run(() => {
+                          this.packageData.update(d => ({ ...d, codigoRastreio: firstCode }));
+                      });
+                      this.ui.vibrate([30, 20, 30]);
+                  }
+              }
+          } catch (_) { /* BarcodeDetector not available on this frame */ }
+      }
+
       // REGRA OTIMIZADA: Estabilização Turbo (6.5% por frame)
-      // Aumenta a velocidade de lock-on para dar a sensação de instantâneo
       this.scanStabilizationProgress.update(v => Math.min(100, v + 6.5)); 
 
       if (this.scanStabilizationProgress() >= 100) {
@@ -568,6 +607,10 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
       // 2. ATIVA O BLACKOUT VISUAL
       this.isProcessingScan.set(true);
       
+      // Track scan start time for 3-second target display
+      const scanStart = Date.now();
+      this.scanStartTime.set(scanStart);
+      
       this.ui.playTone('SHUTTER');
       this.packageData.update(d => ({ ...d, fotoBase64: base64.split(',')[1] })); 
 
@@ -579,16 +622,21 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
       try {
           const allMoradores = this.db.moradores();
           const learnedCarriers = this.db.carriers();
+          // Pass native QR code detected earlier as a hint to Gemini
+          const localHints = { qrCode: this.qrCodeScanned() || undefined };
 
-          // REGRA DE OURO: Delay de apenas 200ms para sensação de velocidade
           const [result] = await Promise.all([
               this.gemini.extractTextFromLabel(
                   base64.split(',')[1], 
                   allMoradores, 
-                  learnedCarriers
+                  learnedCarriers,
+                  localHints
               ),
               new Promise(resolve => setTimeout(resolve, this.STANDARD_CAPTURE_DELAY_MS))
           ]);
+          
+          // Record scan duration
+          this.scanDuration.set((Date.now() - scanStart) / 1000);
           
           // SNIPER MODE: Armazena o texto original lido
           this.originalScannedName.set(result.destinatario);
@@ -602,6 +650,11 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
                   condicaoFisica: (result.condicaoVisual as any) || d.condicaoFisica
               }));
               
+              // Fill bloco/apto directly from Gemini extraction if available
+              if (result.bloco) this.updateModel('bloco', result.bloco);
+              if (result.apto) this.updateModel('apto', result.apto);
+              
+              // Cross-reference with residents DB for additional precision
               if (result.matchedMoradorId) {
                   const morador = allMoradores.find(m => m.id === result.matchedMoradorId);
                   if (morador) {
@@ -676,9 +729,11 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
 
   openScanner() { 
       const permissionChoiceMade = sessionStorage.getItem('camera_permission_choice_made'); 
-      // SNIPER MODE: Limpa o cache sempre que o usuário inicia uma nova leitura manual
+      // SNIPER MODE: Limpa o cache e estado QR sempre que o usuário inicia uma nova leitura
       this.gemini.clearOcrCache(); 
-      this.previousImageData = null; 
+      this.previousImageData = null;
+      this.qrCodeScanned.set(null);
+      this.scanDuration.set(null);
       
       if (permissionChoiceMade) this.startScanner(); 
       else this.showCameraPermissionPrompt.set(true); 
@@ -686,6 +741,65 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
   
   proceedWithCamera() { sessionStorage.setItem('camera_permission_choice_made', 'true'); this.showCameraPermissionPrompt.set(false); this.startScanner(); }
   cancelCameraPermission() { sessionStorage.setItem('camera_permission_choice_made', 'true'); this.showCameraPermissionPrompt.set(false); }
+
+  // --- DEMO SCAN: Simula leitura completa sem câmera para teste/diagnóstico ---
+  async runDemoScan() {
+      if (this.isDemoScanning() || this.isProcessingScan() || this.isReadOnly()) return;
+      this.isDemoScanning.set(true);
+      this.isProcessingScan.set(true);
+      this.showProcessingBreathPrompt.set(true);
+      const start = Date.now();
+      this.scanStartTime.set(start);
+
+      try {
+          const { result, elapsedMs, log } = await this.gemini.simulateFullPipeline();
+          
+          this.lastDemoLog.set(log);
+          this.scanDuration.set(elapsedMs / 1000);
+          this.originalScannedName.set(result.destinatario);
+          const allMoradores = this.db.moradores();
+
+          this.ngZone.run(() => {
+              this.packageData.update(d => ({
+                  ...d,
+                  destinatarioNome: result.destinatario || d.destinatarioNome,
+                  transportadora: result.transportadora || d.transportadora,
+                  codigoRastreio: result.rawRastreio || d.codigoRastreio,
+                  condicaoFisica: (result.condicaoVisual as any) || d.condicaoFisica
+              }));
+
+              if (result.bloco) this.updateModel('bloco', result.bloco);
+              if (result.apto) this.updateModel('apto', result.apto);
+
+              if (result.matchedMoradorId) {
+                  const morador = allMoradores.find(m => m.id === result.matchedMoradorId);
+                  if (morador) {
+                      this.updateModel('bloco', morador.bloco);
+                      this.updateModel('apto', morador.apto);
+                  }
+              }
+
+              this.ocrConfidences.set({
+                  overall: result.confianca,
+                  destinatario: result.destinatarioConfidence || 0,
+                  localizacao: result.localizacaoConfidence || 0,
+                  transportadora: result.transportadoraConfidence || 0,
+                  rastreio: result.rastreioConfidence || 0
+              });
+          });
+
+          const matchMsg = result.matchedMoradorId ? `✓ Identificado no DB` : `⚡ Nome direto do OCR`;
+          this.ui.show(`Simulação OK — ${(elapsedMs / 1000).toFixed(2)}s — ${matchMsg}`, 'SUCCESS');
+          this.ui.vibrate([30, 20, 60]);
+      } catch (e) {
+          console.error('[DemoScan] Erro:', e);
+          this.ui.show('Simulação falhou. Verifique o console.', 'ERROR');
+      } finally {
+          this.showProcessingBreathPrompt.set(false);
+          this.isProcessingScan.set(false);
+          this.isDemoScanning.set(false);
+      }
+  }
 
   async saveNew() {
       if (this.isPrivacyViolation()) { this.ui.show('🚫 PRIVACIDADE: FOTO DESCARTADA. NÃO É PERMITIDO REGISTRAR HUMANOS.', 'ERROR'); return; }

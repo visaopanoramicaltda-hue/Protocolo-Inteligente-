@@ -40,7 +40,7 @@ bootstrapApplication(AppComponent, {
       autoPause: true,
       trace: false,
       traceLimit: 75,
-      connectInZone: true
+      connectInZone: false
     }),
     
     provideServiceWorker('ngsw-worker.js', {

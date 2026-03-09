@@ -27,6 +27,8 @@ export interface ImageQualityData {
 export interface OcrExtractionResult {
   destinatario: string;
   localizacao: string; 
+  bloco?: string;
+  apto?: string;
   transportadora: string;
   confianca: number;
   rawRastreio?: string;
@@ -429,33 +431,37 @@ export class GeminiService {
 
   private async runCloudGemini(base64: string, moradores: Morador[], carriers: string[], localHints: { qrCode?: string }): Promise<OcrExtractionResult> {
       const carrierList = carriers.slice(0, 50).join(',');
+      const qrInfo = localHints.qrCode ? `QR Code nativo detectado: "${localHints.qrCode}". Use ESTE valor como rawRastreio.` : 'Nenhum QR Code detectado pelo scanner nativo.';
       
-      // SNIPER MODE PROMPT REFORÇADO (VERBATIM)
+      // GEMINI 2.0 FLASH - PROTOCOLO SIMBIOSE (pt-BR)
       const systemInstruction = `
-        JSON ONLY. Extract: destinatario, transportadora, rastro. Condição: Intacta/Violada.
-        List: [${carrierList}]. QR: ${localHints.qrCode || 'N/A'}. 
+        IDIOMA OBRIGATÓRIO: PORTUGUÊS DO BRASIL. SOMENTE JSON.
+        ${qrInfo}
+        Transportadoras conhecidas: [${carrierList}].
         
-        SNIPER PROTOCOL ACTIVATED (STRICT VERBATIM):
-        - EXTRACT TEXT EXACTLY AS PRINTED. DO NOT AUTO-CORRECT.
-        - DO NOT GUESS NAMES. If the label says "Maria", WRITE "Maria", even if you think it should be "Mario".
-        - If the name is blurry/illegible, return EMPTY STRING. DO NOT HALLUCINATE.
-        - IGNORE ADDRESS LINES (Rua, Av, CEP). Focus ONLY on RECIPIENT NAME.
+        EXTRAÇÃO EM 3 SEGUNDOS — PROTOCOLO SIMBIOSE COMPLETO:
+        - DESTINATÁRIO: Nome completo do destinatário EXATAMENTE como está impresso. Não corrija nem invente.
+        - BLOCO: Identificador do bloco/torre/prédio (ex: "A", "B", "Torre 1", "Bloco 3"). Pode estar como "AP", "APT", "BL", "BLOCO", "TORRE".
+        - APTO: Número do apartamento/unidade (ex: "101", "302", "45"). Apenas dígitos/letras da unidade.
+        - TRANSPORTADORA: Nome da empresa entregadora. Procure logotipos ou nomes na lista fornecida.
+        - RASTREIO: Código alfanumérico longo (ex: NL123456789BR). Se QR foi detectado, USE-O.
+        - CONDIÇÃO: Estado físico da embalagem (Intacta/Amassada/Rasgada/Violada).
         
-        PRIVACY PROTOCOL ZERO:
-        - YOU MUST NOT PROCESS HUMAN FACES. If a human face is clearly visible, set 'privacyBlocked' to true.
-        
-        IMMUTABLE RULES:
-        1. BLACKLIST: IGNORE 'RUA', 'AV', 'CEP', 'PEDIDO', 'NOTA', 'FISCAL', 'CNPJ', 'CPF', 'VOLUME'.
-        2. TRACKING: Must be long alphanumeric.
-        3. CARRIER: Look for logos or names from the provided list.
+        REGRAS CRÍTICAS:
+        1. NÃO INVENTE DADOS. Se ilegível, retorne string vazia.
+        2. LISTA NEGRA: IGNORE 'RUA', 'AV', 'CEP', 'PEDIDO', 'NOTA', 'FISCAL', 'CNPJ', 'CPF', 'VOLUME', 'REMETENTE'.
+        3. PRIVACIDADE: Se rosto humano visível, defina privacyBlocked=true e não processe.
+        4. BLOCO e APTO são campos SEPARADOS — extraia cada um individualmente.
       `;
-      const prompt = `Analise a etiqueta fielmente. Sem suposições.`;
+      const prompt = `Analise a etiqueta em até 3 segundos. Extraia todos os campos com máxima precisão.`;
 
       const responseSchema: Schema = {
         type: Type.OBJECT,
         properties: { 
             destinatario: { type: Type.STRING },
-            localizacao: { type: Type.STRING },
+            bloco: { type: Type.STRING, description: "Bloco, torre ou prédio do destinatário." },
+            apto: { type: Type.STRING, description: "Número do apartamento ou unidade." },
+            localizacao: { type: Type.STRING, description: "Localização completa como aparece na etiqueta." },
             transportadora: { type: Type.STRING },
             rawRastreio: { type: Type.STRING },
             condicaoVisual: { type: Type.STRING, enum: ["Intacta", "Amassada", "Rasgada", "Violada"] },
@@ -468,23 +474,27 @@ export class GeminiService {
       if (this.geminiApiStatus() !== 'CONFIGURED') throw new Error("No API Key");
 
       const response = await this.genAI.models.generateContent({
-        model: 'gemini-2.5-flash', 
+        model: 'gemini-2.0-flash', 
         contents: { parts: [{ inlineData: { mimeType: 'image/jpeg', data: base64 } }, { text: prompt }] },
-        config: { systemInstruction, responseMimeType: 'application/json', responseSchema, temperature: 0.0, thinkingConfig: { thinkingBudget: 0 } }
+        config: { systemInstruction, responseMimeType: 'application/json', responseSchema, temperature: 0.0 }
       });
       
       const parsed = JSON.parse(response.text || '{}');
+      // Se QR nativo detectou o rastreio, priorize-o
+      const rawRastreio = localHints.qrCode || parsed.rawRastreio || '';
       return {
           destinatario: parsed.destinatario || '',
+          bloco: parsed.bloco || '',
+          apto: parsed.apto || '',
           localizacao: parsed.localizacao || '',
           transportadora: parsed.transportadora || 'LEITURA MANUAL',
           confianca: parsed.confianca || 0.0,
-          rawRastreio: parsed.rawRastreio,
+          rawRastreio,
           condicaoVisual: parsed.condicaoVisual || 'Intacta',
           destinatarioConfidence: parsed.destinatario ? (parsed.confianca || 0.8) : 0,
-          localizacaoConfidence: parsed.localizacao ? (parsed.confianca || 0.8) : 0,
+          localizacaoConfidence: (parsed.bloco || parsed.apto || parsed.localizacao) ? (parsed.confianca || 0.8) : 0,
           transportadoraConfidence: parsed.transportadora ? 0.8 : 0,
-          rastreioConfidence: parsed.rawRastreio ? 0.9 : 0,
+          rastreioConfidence: rawRastreio ? (localHints.qrCode ? 1.0 : 0.9) : 0,
           privacyBlocked: parsed.privacyBlocked || false 
       };
   }
@@ -548,10 +558,87 @@ export class GeminiService {
   private setOcrCacheEntry(key: string, entry: OcrCacheEntry): void {
     if (this.ocrCache.size >= 200 && !this.ocrCache.has(key)) {
       const lruKey = this.ocrCache.keys().next().value;
-      this.ocrCache.delete(lruKey);
+      if (lruKey !== undefined) this.ocrCache.delete(lruKey);
     }
     this.ocrCache.set(key, entry);
     this.saveOcrCache();
   }
   public clearOcrCache(): void { this.ocrCache.clear(); this.saveOcrCache(); }
+
+  // --- PROTOCOLO DE SIMULAÇÃO / TESTE SIMBIOSE ---
+  // Simula uma leitura de etiqueta sem câmera usando um morador real do banco de dados.
+  // Retorna o resultado completo após cruzamento com o banco, como se o Gemini 2.0 Flash tivesse lido a etiqueta.
+  public async simulateFullPipeline(qrCode?: string): Promise<{
+    result: OcrExtractionResult;
+    elapsedMs: number;
+    log: string[];
+  }> {
+    const log: string[] = [];
+    const start = Date.now();
+    const moradores = this.db.moradores();
+    const carriers = this.db.carriers();
+
+    // 1. Pega o primeiro morador do banco como alvo realista do teste
+    const targetMorador = moradores.length > 0 ? moradores[0] : null;
+    if (!targetMorador) {
+      log.push('[AVISO] Nenhum morador cadastrado. Usando dados padrão de teste.');
+    }
+    
+    // 2. Simula as transportadoras conhecidas do sistema
+    const topCarriers = this.getTopLearnedCarriers();
+    const allCarriers = [...new Set([...topCarriers, ...carriers])];
+    const carrierForTest = allCarriers[0] || 'CORREIOS';
+
+    // 3. Monta resultado sintético como se o Gemini 2.0 Flash tivesse extraído da etiqueta
+    //    Simula leitura parcialmente imprecisa (como OCR real) para testar a lógica de cruzamento
+    const targetNome = targetMorador?.nome || 'JOAO SILVA';
+    const simulatedRaw: OcrExtractionResult = {
+      destinatario: this.applyOcrNoise(targetNome),
+      bloco: targetMorador?.bloco || 'A',
+      apto: targetMorador?.apto || '101',
+      localizacao: `BL ${targetMorador?.bloco || 'A'} AP ${targetMorador?.apto || '101'}`,
+      transportadora: carrierForTest,
+      rawRastreio: qrCode || this.generateFakeTrackingCode(),
+      confianca: 0.82,
+      condicaoVisual: 'Intacta',
+      destinatarioConfidence: 0.82,
+      localizacaoConfidence: 0.9,
+      transportadoraConfidence: 0.85,
+      rastreioConfidence: qrCode ? 1.0 : 0.88,
+    };
+    log.push(`[1] OCR Bruto Simulado: destinatario="${simulatedRaw.destinatario}", bloco="${simulatedRaw.bloco}", apto="${simulatedRaw.apto}", transp="${simulatedRaw.transportadora}"`);
+
+    // 4. Roda a lógica de cruzamento com o banco de dados (MESMA lógica da produção)
+    const refinedResult = this.resolveIdentityLogic(simulatedRaw, moradores);
+    log.push(`[2] Após Cruzamento DB: destinatario="${refinedResult.destinatario}", matchedId="${refinedResult.matchedMoradorId || 'none'}", wasAutoCorrected=${refinedResult.wasAutoCorrected}`);
+
+    if (refinedResult.matchedMoradorId) {
+      const matched = moradores.find(m => m.id === refinedResult.matchedMoradorId);
+      log.push(`[3] Morador Confirmado: ${matched?.nome} (Bloco ${matched?.bloco}, Apto ${matched?.apto})`);
+    } else {
+      log.push(`[3] Sem match preciso. Nome mantido como lido.`);
+    }
+    log.push(`[4] Transportadora: ${refinedResult.transportadora} (confiança ${Math.round((refinedResult.transportadoraConfidence || 0) * 100)}%)`);
+    log.push(`[5] Código de Rastreio: ${refinedResult.rawRastreio}`);
+
+    const elapsedMs = Date.now() - start;
+    log.push(`[6] Pipeline completo em ${elapsedMs}ms (alvo: <3000ms)`);
+    return { result: refinedResult, elapsedMs, log };
+  }
+
+  // Gera ruído leve como em leituras OCR reais (substitui letras parecidas)
+  private applyOcrNoise(name: string): string {
+    if (!name) return 'JOAO SILVA';
+    return name
+      .replace(/O/g, (_, i) => i % 7 === 0 ? '0' : 'O')  // Substitui O por 0 às vezes
+      .replace(/I/g, (_, i) => i % 9 === 0 ? 'L' : 'I')  // I -> L
+      .toUpperCase();
+  }
+
+  private generateFakeTrackingCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const prefix = ['NL', 'LB', 'BR', 'OE', 'PQ'][Math.floor(Math.random() * 5)];
+    const body = Array.from({ length: 9 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    return `${prefix}${body}BR`;
+  }
 }

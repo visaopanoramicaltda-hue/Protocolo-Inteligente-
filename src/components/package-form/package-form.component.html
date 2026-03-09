@@ -132,6 +132,15 @@
                      </div>
                 </div>
             </button>
+            <!-- SIMULATE / TEST BUTTON -->
+            @if (!isReadOnly()) {
+                <button (click)="runDemoScan()"
+                        [disabled]="isDemoScanning() || isProcessingScan()"
+                        class="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#5c4d46] border border-[#d1c4b5] bg-[#F2EBE5] rounded-sm px-3 py-1.5 hover:bg-[#2a2320] hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span>🔬</span>
+                    <span>{{ isDemoScanning() ? 'Simulando...' : 'Simular Leitura' }}</span>
+                </button>
+            }
         }
     </div>
 
@@ -567,8 +576,11 @@
             <div class="absolute top-20 right-6 text-right font-mono text-[8px] text-[#E86C26]/80 leading-tight">
                 <p>REC: ON</p>
                 <p>ISO: AUTO</p>
-                <p>AI: V4.2</p>
+                <p>AI: GEMINI 2.0</p>
                 <p>FPS: 60</p>
+                @if (qrCodeScanned()) {
+                    <p class="text-green-400 font-black mt-1">QR ✓</p>
+                }
             </div>
         </div>
         
@@ -614,12 +626,19 @@
         @if (isProcessingScan()) {
             <div class="absolute inset-0 z-[6000] bg-[#050505] flex flex-col items-center justify-center animate-[fadeIn_0.1s_ease-out]">
                 <!-- Simbiose Effect -->
-                <div class="relative">
-                    <h2 class="text-3xl font-black text-[#E86C26] tracking-[0.2em] uppercase mb-2 text-center animate-pulse drop-shadow-[0_0_15px_#E86C26]">Simbiose</h2>
+                <div class="relative mb-2">
+                    <h2 class="text-3xl font-black text-[#E86C26] tracking-[0.2em] uppercase text-center animate-pulse drop-shadow-[0_0_15px_#E86C26]">Simbiose</h2>
                     <!-- Glow Line -->
-                    <div class="h-0.5 w-full bg-[#E86C26] shadow-[0_0_20px_#E86C26] animate-[width_1s_infinite]"></div>
+                    <div class="h-0.5 w-full bg-[#E86C26] shadow-[0_0_20px_#E86C26]"></div>
                 </div>
-                <span class="text-[#E86C26] font-mono text-[10px] mt-4 animate-bounce">Processando...</span>
+                <span class="text-[#E86C26] font-mono text-[10px] mt-2 animate-bounce tracking-widest">Processando...</span>
+                <span class="text-white/40 font-mono text-[9px] mt-3 uppercase tracking-[0.2em]">Gemini 2.0 Flash</span>
+                @if (qrCodeScanned()) {
+                    <div class="mt-4 bg-green-900/40 border border-green-500/50 px-4 py-2 rounded-sm text-center">
+                        <p class="text-[9px] font-black text-green-400 uppercase tracking-widest">✓ QR Code Nativo</p>
+                        <p class="text-[10px] font-mono text-green-300 truncate max-w-[200px]">{{ qrCodeScanned() }}</p>
+                    </div>
+                }
             </div>
         }
     </div>

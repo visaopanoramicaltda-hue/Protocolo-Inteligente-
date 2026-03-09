@@ -1,0 +1,65 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Initialize TWA project
+        run: |
+          mkdir twa
+          cd twa
+          npx @bubblewrap/cli init \
+          --manifest=https://protocolo-digital-v2-8.web.app/manifest.webmanifest \
+          --directory=. \
+          --packageId=app.protocolo.inteligente \
+          --name="Protocolo Inteligente" \
+          --launcherName="Protocolo" \
+          --host=protocolo-digital-v2-8.web.app \
+          --startUrl=https://protocolo-digital-v2-8.web.app \
+          --displayMode=standalone \
+          --orientation=portrait \
+          --themeColor=#3b1f15 \
+          --backgroundColor=#3b1f15
+
+      - name: Build APK
+        run: |
+          cd twa
+          npx @bubblewrap/cli build
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: protocolo-inteligente-apk
+          path: twa/android/app/build/outputs/apk/release/*.apk
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: protocolo-inteligente-aab
+          path: twa/android/app/build/outputs/bundle/release/*.aab
