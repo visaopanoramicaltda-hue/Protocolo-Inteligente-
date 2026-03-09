@@ -27,6 +27,8 @@ export interface ImageQualityData {
 export interface OcrExtractionResult {
   destinatario: string;
   localizacao: string; 
+  bloco?: string;
+  apto?: string;
   transportadora: string;
   confianca: number;
   rawRastreio?: string;
@@ -429,34 +431,37 @@ export class GeminiService {
 
   private async runCloudGemini(base64: string, moradores: Morador[], carriers: string[], localHints: { qrCode?: string }): Promise<OcrExtractionResult> {
       const carrierList = carriers.slice(0, 50).join(',');
+      const qrInfo = localHints.qrCode ? `QR Code nativo detectado: "${localHints.qrCode}". Use ESTE valor como rawRastreio.` : 'Nenhum QR Code detectado pelo scanner nativo.';
       
-      // SNIPER MODE PROMPT REFORÇADO (VERBATIM) - IDIOMA: PORTUGUÊS BRASILEIRO
+      // GEMINI 2.0 FLASH - PROTOCOLO SIMBIOSE (pt-BR)
       const systemInstruction = `
-        RESPONDA APENAS EM PORTUGUÊS DO BRASIL. IDIOMA OBRIGATÓRIO: PORTUGUÊS (pt-BR).
-        SOMENTE JSON. Extraia: destinatario, transportadora, rastreio. Condição: Intacta/Violada/Amassada/Rasgada.
-        Transportadoras conhecidas: [${carrierList}]. QR lido: ${localHints.qrCode || 'N/A'}.
+        IDIOMA OBRIGATÓRIO: PORTUGUÊS DO BRASIL. SOMENTE JSON.
+        ${qrInfo}
+        Transportadoras conhecidas: [${carrierList}].
         
-        PROTOCOLO SNIPER ATIVADO (MODO VERBATIM ESTRITO):
-        - EXTRAIA O TEXTO EXATAMENTE COMO IMPRESSO. NÃO AUTO-CORRIJA.
-        - NÃO ADIVINHE NOMES. Se a etiqueta diz "Maria", ESCREVA "Maria", mesmo que pareça ser "Mario".
-        - Se o nome estiver ilegível ou borrado, retorne STRING VAZIA. NÃO INVENTE DADOS.
-        - IGNORE ENDEREÇOS (Rua, Av, CEP). Foque APENAS no NOME DO DESTINATÁRIO.
+        EXTRAÇÃO EM 3 SEGUNDOS — PROTOCOLO SIMBIOSE COMPLETO:
+        - DESTINATÁRIO: Nome completo do destinatário EXATAMENTE como está impresso. Não corrija nem invente.
+        - BLOCO: Identificador do bloco/torre/prédio (ex: "A", "B", "Torre 1", "Bloco 3"). Pode estar como "AP", "APT", "BL", "BLOCO", "TORRE".
+        - APTO: Número do apartamento/unidade (ex: "101", "302", "45"). Apenas dígitos/letras da unidade.
+        - TRANSPORTADORA: Nome da empresa entregadora. Procure logotipos ou nomes na lista fornecida.
+        - RASTREIO: Código alfanumérico longo (ex: NL123456789BR). Se QR foi detectado, USE-O.
+        - CONDIÇÃO: Estado físico da embalagem (Intacta/Amassada/Rasgada/Violada).
         
-        PROTOCOLO DE PRIVACIDADE ZERO:
-        - NÃO PROCESSE ROSTOS HUMANOS. Se um rosto humano estiver visível, defina 'privacyBlocked' como true.
-        
-        REGRAS IMUTÁVEIS:
-        1. LISTA NEGRA: IGNORE 'RUA', 'AV', 'CEP', 'PEDIDO', 'NOTA', 'FISCAL', 'CNPJ', 'CPF', 'VOLUME'.
-        2. RASTREIO: Deve ser alfanumérico longo.
-        3. TRANSPORTADORA: Procure logotipos ou nomes da lista fornecida.
+        REGRAS CRÍTICAS:
+        1. NÃO INVENTE DADOS. Se ilegível, retorne string vazia.
+        2. LISTA NEGRA: IGNORE 'RUA', 'AV', 'CEP', 'PEDIDO', 'NOTA', 'FISCAL', 'CNPJ', 'CPF', 'VOLUME', 'REMETENTE'.
+        3. PRIVACIDADE: Se rosto humano visível, defina privacyBlocked=true e não processe.
+        4. BLOCO e APTO são campos SEPARADOS — extraia cada um individualmente.
       `;
-      const prompt = `Analise a etiqueta com fidelidade. Sem suposições. Responda em português.`;
+      const prompt = `Analise a etiqueta em até 3 segundos. Extraia todos os campos com máxima precisão.`;
 
       const responseSchema: Schema = {
         type: Type.OBJECT,
         properties: { 
             destinatario: { type: Type.STRING },
-            localizacao: { type: Type.STRING },
+            bloco: { type: Type.STRING, description: "Bloco, torre ou prédio do destinatário." },
+            apto: { type: Type.STRING, description: "Número do apartamento ou unidade." },
+            localizacao: { type: Type.STRING, description: "Localização completa como aparece na etiqueta." },
             transportadora: { type: Type.STRING },
             rawRastreio: { type: Type.STRING },
             condicaoVisual: { type: Type.STRING, enum: ["Intacta", "Amassada", "Rasgada", "Violada"] },
@@ -469,23 +474,27 @@ export class GeminiService {
       if (this.geminiApiStatus() !== 'CONFIGURED') throw new Error("No API Key");
 
       const response = await this.genAI.models.generateContent({
-        model: 'gemini-2.5-flash', 
+        model: 'gemini-2.0-flash', 
         contents: { parts: [{ inlineData: { mimeType: 'image/jpeg', data: base64 } }, { text: prompt }] },
-        config: { systemInstruction, responseMimeType: 'application/json', responseSchema, temperature: 0.0, thinkingConfig: { thinkingBudget: 0 } }
+        config: { systemInstruction, responseMimeType: 'application/json', responseSchema, temperature: 0.0 }
       });
       
       const parsed = JSON.parse(response.text || '{}');
+      // Se QR nativo detectou o rastreio, priorize-o
+      const rawRastreio = localHints.qrCode || parsed.rawRastreio || '';
       return {
           destinatario: parsed.destinatario || '',
+          bloco: parsed.bloco || '',
+          apto: parsed.apto || '',
           localizacao: parsed.localizacao || '',
           transportadora: parsed.transportadora || 'LEITURA MANUAL',
           confianca: parsed.confianca || 0.0,
-          rawRastreio: parsed.rawRastreio,
+          rawRastreio,
           condicaoVisual: parsed.condicaoVisual || 'Intacta',
           destinatarioConfidence: parsed.destinatario ? (parsed.confianca || 0.8) : 0,
-          localizacaoConfidence: parsed.localizacao ? (parsed.confianca || 0.8) : 0,
+          localizacaoConfidence: (parsed.bloco || parsed.apto || parsed.localizacao) ? (parsed.confianca || 0.8) : 0,
           transportadoraConfidence: parsed.transportadora ? 0.8 : 0,
-          rastreioConfidence: parsed.rawRastreio ? 0.9 : 0,
+          rastreioConfidence: rawRastreio ? (localHints.qrCode ? 1.0 : 0.9) : 0,
           privacyBlocked: parsed.privacyBlocked || false 
       };
   }
