@@ -5,8 +5,8 @@
   "description": "Sistema inteligente de protocolo e gestão documental",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0b0f1a",
-  "theme_color": "#0b0f1a",
+  "background_color": "#3b1f15",
+  "theme_color": "#3b1f15",
   "orientation": "portrait",
   "icons": [
     {
