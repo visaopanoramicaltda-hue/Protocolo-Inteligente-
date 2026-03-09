@@ -22,7 +22,7 @@
               "src/assets",
               "src/manifest.webmanifest"
             ],
-            "serviceWorker": true
+            "serviceWorker": "ngsw-config.json"
           },
           "configurations": {
             "production": {

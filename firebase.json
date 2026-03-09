@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "dist/your-angular-app",
+    "public": "dist",
     "rewrites": [
       {"source": "/**", "destination": "/index.html"}
     ]
