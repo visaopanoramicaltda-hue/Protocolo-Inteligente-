@@ -132,6 +132,15 @@
                      </div>
                 </div>
             </button>
+            <!-- SIMULATE / TEST BUTTON -->
+            @if (!isReadOnly()) {
+                <button (click)="runDemoScan()"
+                        [disabled]="isDemoScanning() || isProcessingScan()"
+                        class="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#5c4d46] border border-[#d1c4b5] bg-[#F2EBE5] rounded-sm px-3 py-1.5 hover:bg-[#2a2320] hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span>🔬</span>
+                    <span>{{ isDemoScanning() ? 'Simulando...' : 'Simular Leitura' }}</span>
+                </button>
+            }
         }
     </div>
 

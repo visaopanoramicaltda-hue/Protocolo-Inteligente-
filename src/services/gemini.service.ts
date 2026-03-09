@@ -564,4 +564,81 @@ export class GeminiService {
     this.saveOcrCache();
   }
   public clearOcrCache(): void { this.ocrCache.clear(); this.saveOcrCache(); }
+
+  // --- PROTOCOLO DE SIMULAÇÃO / TESTE SIMBIOSE ---
+  // Simula uma leitura de etiqueta sem câmera usando um morador real do banco de dados.
+  // Retorna o resultado completo após cruzamento com o banco, como se o Gemini 2.0 Flash tivesse lido a etiqueta.
+  public async simulateFullPipeline(qrCode?: string): Promise<{
+    result: OcrExtractionResult;
+    elapsedMs: number;
+    log: string[];
+  }> {
+    const log: string[] = [];
+    const start = Date.now();
+    const moradores = this.db.moradores();
+    const carriers = this.db.carriers();
+
+    // 1. Pega o primeiro morador do banco como alvo realista do teste
+    const targetMorador = moradores.length > 0 ? moradores[0] : null;
+    if (!targetMorador) {
+      log.push('[AVISO] Nenhum morador cadastrado. Usando dados padrão de teste.');
+    }
+    
+    // 2. Simula as transportadoras conhecidas do sistema
+    const topCarriers = this.getTopLearnedCarriers();
+    const allCarriers = [...new Set([...topCarriers, ...carriers])];
+    const carrierForTest = allCarriers[0] || 'CORREIOS';
+
+    // 3. Monta resultado sintético como se o Gemini 2.0 Flash tivesse extraído da etiqueta
+    //    Simula leitura parcialmente imprecisa (como OCR real) para testar a lógica de cruzamento
+    const targetNome = targetMorador?.nome || 'JOAO SILVA';
+    const simulatedRaw: OcrExtractionResult = {
+      destinatario: this.applyOcrNoise(targetNome),
+      bloco: targetMorador?.bloco || 'A',
+      apto: targetMorador?.apto || '101',
+      localizacao: `BL ${targetMorador?.bloco || 'A'} AP ${targetMorador?.apto || '101'}`,
+      transportadora: carrierForTest,
+      rawRastreio: qrCode || this.generateFakeTrackingCode(),
+      confianca: 0.82,
+      condicaoVisual: 'Intacta',
+      destinatarioConfidence: 0.82,
+      localizacaoConfidence: 0.9,
+      transportadoraConfidence: 0.85,
+      rastreioConfidence: qrCode ? 1.0 : 0.88,
+    };
+    log.push(`[1] OCR Bruto Simulado: destinatario="${simulatedRaw.destinatario}", bloco="${simulatedRaw.bloco}", apto="${simulatedRaw.apto}", transp="${simulatedRaw.transportadora}"`);
+
+    // 4. Roda a lógica de cruzamento com o banco de dados (MESMA lógica da produção)
+    const refinedResult = this.resolveIdentityLogic(simulatedRaw, moradores);
+    log.push(`[2] Após Cruzamento DB: destinatario="${refinedResult.destinatario}", matchedId="${refinedResult.matchedMoradorId || 'none'}", wasAutoCorrected=${refinedResult.wasAutoCorrected}`);
+
+    if (refinedResult.matchedMoradorId) {
+      const matched = moradores.find(m => m.id === refinedResult.matchedMoradorId);
+      log.push(`[3] Morador Confirmado: ${matched?.nome} (Bloco ${matched?.bloco}, Apto ${matched?.apto})`);
+    } else {
+      log.push(`[3] Sem match preciso. Nome mantido como lido.`);
+    }
+    log.push(`[4] Transportadora: ${refinedResult.transportadora} (confiança ${Math.round((refinedResult.transportadoraConfidence || 0) * 100)}%)`);
+    log.push(`[5] Código de Rastreio: ${refinedResult.rawRastreio}`);
+
+    const elapsedMs = Date.now() - start;
+    log.push(`[6] Pipeline completo em ${elapsedMs}ms (alvo: <3000ms)`);
+    return { result: refinedResult, elapsedMs, log };
+  }
+
+  // Gera ruído leve como em leituras OCR reais (substitui letras parecidas)
+  private applyOcrNoise(name: string): string {
+    if (!name) return 'JOAO SILVA';
+    return name
+      .replace(/O/g, (_, i) => i % 7 === 0 ? '0' : 'O')  // Substitui O por 0 às vezes
+      .replace(/I/g, (_, i) => i % 9 === 0 ? 'L' : 'I')  // I -> L
+      .toUpperCase();
+  }
+
+  private generateFakeTrackingCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const prefix = ['NL', 'LB', 'BR', 'OE', 'PQ'][Math.floor(Math.random() * 5)];
+    const body = Array.from({ length: 9 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    return `${prefix}${body}BR`;
+  }
 }

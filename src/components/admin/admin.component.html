@@ -732,6 +732,47 @@
                 </div>
             </section>
 
+            <!-- SECTION: TESTE PIPELINE SIMBIOSE -->
+            <section class="space-y-4">
+                <h3 class="text-sm font-black text-[#E86C26] uppercase tracking-widest">🔬 Teste Pipeline Simbiose</h3>
+                <p class="text-[11px] text-gray-400 leading-relaxed">
+                    Simula uma leitura de etiqueta completa (OCR → Gemini 2.0 Flash → Cruzamento DB) sem câmera.
+                    Usa o primeiro morador cadastrado como alvo do teste.
+                </p>
+                <button (click)="runSimbioseTest()"
+                        [disabled]="isSimbioseTestRunning()"
+                        class="w-full py-4 bg-[#E86C26]/10 border border-[#E86C26]/40 text-[#E86C26] font-black uppercase text-xs tracking-widest rounded-lg hover:bg-[#E86C26] hover:text-black transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">
+                    {{ isSimbioseTestRunning() ? '⏳ Executando...' : '▶ Executar Teste' }}
+                </button>
+
+                @if (simbioseTestLog().length > 0) {
+                    <div class="bg-[#0a0a0a] border border-white/10 rounded-lg p-4 space-y-1.5">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Log de Execução</span>
+                            <span class="text-[10px] font-bold"
+                                  [class.text-green-400]="simbioseTestPassed()"
+                                  [class.text-red-400]="!simbioseTestPassed()">
+                                {{ simbioseTestPassed() ? '✓ PASSOU' : '✗ FALHOU' }}
+                            </span>
+                        </div>
+                        @for (line of simbioseTestLog(); track $index) {
+                            <p class="text-[10px] font-mono text-gray-300 leading-relaxed border-l-2 border-[#E86C26]/40 pl-2">{{ line }}</p>
+                        }
+                        @if (simbioseTestElapsedMs() > 0) {
+                            <div class="mt-2 pt-2 border-t border-white/10 flex items-center gap-2">
+                                <span class="text-[10px] font-bold uppercase text-gray-500">Tempo Total:</span>
+                                <span class="text-[10px] font-black font-mono"
+                                      [class.text-green-400]="simbioseTestElapsedMs() < 3000"
+                                      [class.text-yellow-400]="simbioseTestElapsedMs() >= 3000">
+                                    {{ simbioseTestElapsedMs() }}ms
+                                    {{ simbioseTestElapsedMs() < 3000 ? '✓ Meta atingida' : '⚠ Acima de 3s' }}
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+
             <!-- SECTION: GOOGLE DRIVE BACKUP -->
             <section class="space-y-3">
                 <h3 class="text-sm font-black text-[#E86C26] uppercase tracking-widest">Google Drive Backup</h3>

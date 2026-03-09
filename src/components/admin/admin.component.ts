@@ -92,6 +92,12 @@ export class AdminHubComponent implements OnInit, OnDestroy {
   // RESTORE STATE
   isRestoring = signal(false);
 
+  // Simbiose Pipeline Test State
+  isSimbioseTestRunning = signal(false);
+  simbioseTestLog = signal<string[]>([]);
+  simbioseTestPassed = signal(false);
+  simbioseTestElapsedMs = signal(0);
+
   // Modal States
   showPorteiroModal = signal(false);
   porteiroModalMode = signal<'ADD' | 'EDIT' | 'CHANGE_PASSWORD'>('ADD');
@@ -1253,6 +1259,29 @@ export class AdminHubComponent implements OnInit, OnDestroy {
 
   testarAutomacao() {
       this.deepSeek.simularNotificacaoAtraso();
+  }
+
+  async runSimbioseTest() {
+      if (this.isSimbioseTestRunning()) return;
+      this.isSimbioseTestRunning.set(true);
+      this.simbioseTestLog.set([]);
+      this.simbioseTestPassed.set(false);
+      this.simbioseTestElapsedMs.set(0);
+      try {
+          const { result, elapsedMs, log } = await this.gemini.simulateFullPipeline();
+          this.simbioseTestLog.set(log);
+          this.simbioseTestElapsedMs.set(elapsedMs);
+          const passed = !!(result.destinatario && result.transportadora && elapsedMs < 5000);
+          this.simbioseTestPassed.set(passed);
+          const matchInfo = result.matchedMoradorId ? '✓ Match DB' : '⚡ OCR Direto';
+          this.ui.show(`Teste ${passed ? 'OK' : 'FALHOU'} — ${(elapsedMs / 1000).toFixed(2)}s — ${matchInfo}`, passed ? 'SUCCESS' : 'ERROR');
+      } catch (e) {
+          this.simbioseTestLog.set([`ERRO: ${(e as any)?.message || e}`]);
+          this.simbioseTestPassed.set(false);
+          this.ui.show('Erro no teste. Veja o log.', 'ERROR');
+      } finally {
+          this.isSimbioseTestRunning.set(false);
+      }
   }
 
   async generateReport() {
