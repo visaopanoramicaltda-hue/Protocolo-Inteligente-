@@ -103,27 +103,26 @@
                 <div class="flex items-center gap-3 md:gap-6">
                      
                      <!-- PLANO ATIVO -->
-                     <div class="flex flex-col">
-                        <span class="text-[7px] md:text-[8px] text-gray-500 font-bold uppercase tracking-wider hidden md:block">Plano</span>
-                        <span class="text-[10px] md:text-xs font-black uppercase tracking-widest"
+                     <div class="flex flex-col items-center leading-none">
+                        <span class="text-[9px] font-black uppercase tracking-widest"
                               [class.text-white]="auth.activePlan() === 'START'"
-                              [class.text-[#E86C26]]="auth.activePlan() === 'START' || auth.activePlan() === 'PRO'"
+                              [class.text-[#E86C26]]="auth.activePlan() === 'PRO'"
                               [class.text-blue-400]="auth.activePlan() === 'BASICO'"
                               [class.text-purple-400]="auth.activePlan() === 'ENTERPRISE'"
-                              [class.text-yellow-500]="auth.activePlan() === 'PRO_INFINITY' || auth.activePlan() === 'DEV_SUPREMO'">
-                            {{ auth.activePlan() === 'PRO_INFINITY' ? 'PRO ∞' : auth.activePlan() }}
+                              [class.text-yellow-400]="auth.activePlan() === 'PRO_INFINITY' || auth.activePlan() === 'DEV_SUPREMO'">
+                            {{ auth.activePlan() === 'PRO_INFINITY' || auth.activePlan() === 'DEV_SUPREMO' ? 'PRO' : auth.activePlan() }}
                         </span>
+                        @if(auth.activePlan() === 'PRO_INFINITY' || auth.activePlan() === 'DEV_SUPREMO') {
+                            <span class="text-base font-black text-yellow-400 leading-tight">∞</span>
+                        }
                      </div>
 
                      <!-- CONTADOR DE ETIQUETAS -->
-                     <div class="flex flex-col border-l border-white/10 pl-3 md:pl-4">
-                        <span class="text-[7px] md:text-[8px] text-gray-500 font-bold uppercase tracking-wider hidden md:block">Lidas</span>
-                        <div class="flex items-end gap-1">
-                            <span class="text-[10px] md:text-xs font-mono font-bold text-white">{{ auth.usageCount() }}</span>
-                            <span class="text-[8px] text-gray-600 font-bold mb-0.5">/</span>
-                            <span class="text-[9px] text-gray-500 font-bold mb-0.5">
-                                {{ auth.getPlanLimit() > 999999 ? '∞' : auth.getPlanLimit() }}
-                            </span>
+                     <div class="flex flex-col border-l border-white/10 pl-3">
+                        <span class="text-[7px] text-gray-500 font-bold uppercase tracking-wider">CONTADOR DE ETIQUETAS:</span>
+                        <div class="flex items-center gap-1">
+                            <span class="text-lg font-mono font-black text-white leading-none">{{ auth.usageCount() }}</span>
+                            <span class="text-lg leading-none" role="img" aria-label="etiquetas">📚</span>
                         </div>
                      </div>
                 </div>
@@ -134,11 +133,9 @@
                 <!-- USER PROFILE & LOGOUT -->
                 <div class="flex items-center gap-2 md:gap-3 md:pl-4 md:border-l md:border-white/10">
                     <div class="text-right">
-                        <!-- Label "Operador" -->
-                        <p class="text-[8px] text-gray-500 uppercase font-bold tracking-wider hidden md:block">Operador</p>
-                        <!-- Nome Dourado visível -->
-                        <p class="text-[10px] md:text-xs font-bold text-[#d4af37] uppercase tracking-wide">
-                            Olá, {{ (auth.currentUser()?.nome?.split(' ')?.[0]) || 'Admin' }}
+                        <p class="text-[8px] text-gray-500 uppercase font-bold tracking-wider">OLÁ,</p>
+                        <p class="text-[10px] md:text-xs font-black text-[#d4af37] uppercase tracking-wide">
+                            {{ (auth.currentUser()?.nome?.split(' ')?.[0]) || 'Admin' }}
                         </p>
                     </div>
                     
