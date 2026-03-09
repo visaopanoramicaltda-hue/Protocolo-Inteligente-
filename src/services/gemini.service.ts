@@ -430,26 +430,27 @@ export class GeminiService {
   private async runCloudGemini(base64: string, moradores: Morador[], carriers: string[], localHints: { qrCode?: string }): Promise<OcrExtractionResult> {
       const carrierList = carriers.slice(0, 50).join(',');
       
-      // SNIPER MODE PROMPT REFORÇADO (VERBATIM)
+      // SNIPER MODE PROMPT REFORÇADO (VERBATIM) - IDIOMA: PORTUGUÊS BRASILEIRO
       const systemInstruction = `
-        JSON ONLY. Extract: destinatario, transportadora, rastro. Condição: Intacta/Violada.
-        List: [${carrierList}]. QR: ${localHints.qrCode || 'N/A'}. 
+        RESPONDA APENAS EM PORTUGUÊS DO BRASIL. IDIOMA OBRIGATÓRIO: PORTUGUÊS (pt-BR).
+        SOMENTE JSON. Extraia: destinatario, transportadora, rastreio. Condição: Intacta/Violada/Amassada/Rasgada.
+        Transportadoras conhecidas: [${carrierList}]. QR lido: ${localHints.qrCode || 'N/A'}.
         
-        SNIPER PROTOCOL ACTIVATED (STRICT VERBATIM):
-        - EXTRACT TEXT EXACTLY AS PRINTED. DO NOT AUTO-CORRECT.
-        - DO NOT GUESS NAMES. If the label says "Maria", WRITE "Maria", even if you think it should be "Mario".
-        - If the name is blurry/illegible, return EMPTY STRING. DO NOT HALLUCINATE.
-        - IGNORE ADDRESS LINES (Rua, Av, CEP). Focus ONLY on RECIPIENT NAME.
+        PROTOCOLO SNIPER ATIVADO (MODO VERBATIM ESTRITO):
+        - EXTRAIA O TEXTO EXATAMENTE COMO IMPRESSO. NÃO AUTO-CORRIJA.
+        - NÃO ADIVINHE NOMES. Se a etiqueta diz "Maria", ESCREVA "Maria", mesmo que pareça ser "Mario".
+        - Se o nome estiver ilegível ou borrado, retorne STRING VAZIA. NÃO INVENTE DADOS.
+        - IGNORE ENDEREÇOS (Rua, Av, CEP). Foque APENAS no NOME DO DESTINATÁRIO.
         
-        PRIVACY PROTOCOL ZERO:
-        - YOU MUST NOT PROCESS HUMAN FACES. If a human face is clearly visible, set 'privacyBlocked' to true.
+        PROTOCOLO DE PRIVACIDADE ZERO:
+        - NÃO PROCESSE ROSTOS HUMANOS. Se um rosto humano estiver visível, defina 'privacyBlocked' como true.
         
-        IMMUTABLE RULES:
-        1. BLACKLIST: IGNORE 'RUA', 'AV', 'CEP', 'PEDIDO', 'NOTA', 'FISCAL', 'CNPJ', 'CPF', 'VOLUME'.
-        2. TRACKING: Must be long alphanumeric.
-        3. CARRIER: Look for logos or names from the provided list.
+        REGRAS IMUTÁVEIS:
+        1. LISTA NEGRA: IGNORE 'RUA', 'AV', 'CEP', 'PEDIDO', 'NOTA', 'FISCAL', 'CNPJ', 'CPF', 'VOLUME'.
+        2. RASTREIO: Deve ser alfanumérico longo.
+        3. TRANSPORTADORA: Procure logotipos ou nomes da lista fornecida.
       `;
-      const prompt = `Analise a etiqueta fielmente. Sem suposições.`;
+      const prompt = `Analise a etiqueta com fidelidade. Sem suposições. Responda em português.`;
 
       const responseSchema: Schema = {
         type: Type.OBJECT,
@@ -548,7 +549,7 @@ export class GeminiService {
   private setOcrCacheEntry(key: string, entry: OcrCacheEntry): void {
     if (this.ocrCache.size >= 200 && !this.ocrCache.has(key)) {
       const lruKey = this.ocrCache.keys().next().value;
-      this.ocrCache.delete(lruKey);
+      if (lruKey !== undefined) this.ocrCache.delete(lruKey);
     }
     this.ocrCache.set(key, entry);
     this.saveOcrCache();

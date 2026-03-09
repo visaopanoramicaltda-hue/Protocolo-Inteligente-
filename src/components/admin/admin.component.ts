@@ -1,5 +1,5 @@
 
-import { Component, inject, signal, computed, effect, ViewChild, ElementRef, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, effect, ViewChild, ElementRef, OnDestroy, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DbService, Porteiro, Morador, AppConfig, Encomenda, SystemLog, InboxMessage } from '../../services/db.service';
@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { UiService } from '../../services/ui.service';
 import { GoogleDriveService } from '../../services/google-drive.service';
 import { DataProtectionService } from '../../services/data-protection.service';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GeminiService } from '../../services/gemini.service';
 import { PdfService } from '../../services/pdf.service';
 import { SimbiosePolicyEngine, FuncaoUsuario, AcaoSistema } from '../../services/core/simbiose-policy.service';
@@ -31,7 +31,7 @@ type ReportType = 'ENCOMENDAS' | 'PORTEIROS' | 'MORADORES' | 'ENTREGADORES';
 
 @Component({
   selector: 'app-admin-hub',
-  imports: [CommonModule, FormsModule, RouterLink, DatePipe, QuantumNetComponent],
+  imports: [CommonModule, FormsModule, DatePipe, QuantumNetComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush, 
   templateUrl: './admin.component.html',
@@ -75,7 +75,6 @@ export class AdminHubComponent implements OnInit, OnDestroy {
   deepSeek = inject(DeepSeekService);
   contactService = inject(DeviceContactService); 
   private backPress = inject(BackPressService);
-  private cdRef = inject(ChangeDetectorRef);
   private hashService = inject(SimbioseHashService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
