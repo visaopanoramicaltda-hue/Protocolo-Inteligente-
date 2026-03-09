@@ -105,17 +105,17 @@
               </div>
           </div>
 
-          <!-- 3. SEARCH BAR (DARK PILL) -->
+          <!-- 3. SEARCH BAR (DARK ROUNDED) -->
           <div class="px-4 pb-2">
-              <div class="relative w-full bg-[#1a1a1a] border border-[#333] rounded-full overflow-hidden focus-within:border-[#E86C26] transition-colors">
+              <div class="relative w-full bg-[#1a1a1a] border border-[#3a3a3a] rounded-xl overflow-hidden focus-within:border-[#E86C26] transition-colors">
                   <input type="text" 
                          [ngModel]="searchQuery()" 
                          (ngModelChange)="searchQuery.set($event); onInlineSearch()"
                          autocomplete="off" 
                          [placeholder]="viewMode() === 'SHELF' ? 'Filtrar por Bloco/Apto...' : 'Buscar destinatário, unidade...'" 
-                         class="w-full bg-transparent px-5 py-3 text-white font-serif font-bold text-sm italic placeholder-white/40 outline-none uppercase">
+                         class="w-full bg-transparent px-5 py-3 text-white font-serif font-bold text-sm italic placeholder-white/30 outline-none uppercase">
                   <div class="absolute right-4 top-1/2 -translate-y-1/2 text-[#E86C26]">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                   </div>
               </div>
           </div>
@@ -227,8 +227,8 @@
                                 <!-- Footer: Button -->
                                 <div class="p-2 border-t border-[#eee]">
                                     @if ((item.status || '') === 'PENDENTE') {
-                                        <button (click)="$event.stopPropagation(); startWithdrawal(item)" class="w-full h-10 bg-[#E86C26] text-white text-[11px] font-black uppercase tracking-widest shadow-[0_2px_0_#b04b12] active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2 border border-[#b04b12] rounded-sm gpu-layer">
-                                            ASSINAR <span class="text-sm">✎</span>
+                                        <button (click)="$event.stopPropagation(); startWithdrawal(item)" class="w-full h-10 bg-[#E86C26] text-white text-[11px] font-black uppercase tracking-widest shadow-[0_2px_0_#b04b12] active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center border border-[#b04b12] rounded-sm gpu-layer">
+                                            ASSINAR
                                         </button>
                                     } @else if ((item.status || '') === 'ENTREGUE') {
                                         <button (click)="shareDeliveredProof($event, item)" class="w-full h-10 bg-[#dcfce7] text-[#15803d] border border-green-300 font-bold uppercase text-[10px] tracking-widest flex items-center justify-center gap-1 rounded-sm gpu-layer">
