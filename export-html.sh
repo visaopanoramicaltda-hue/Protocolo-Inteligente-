@@ -13,7 +13,7 @@
 set -euo pipefail
 
 echo "🔧 Instalando dependências..."
-npm ci --legacy-peer-deps 2>/dev/null || npm install --legacy-peer-deps
+npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
 echo "🏗️  Compilando o projeto para HTML..."
 npx ng build --configuration production
