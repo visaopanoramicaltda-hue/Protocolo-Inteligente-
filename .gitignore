@@ -1,3 +1,6 @@
+# Segredos — NUNCA comitar
+.env
+
 # Logs
 logs
 *.log

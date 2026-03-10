@@ -4,18 +4,32 @@
 
 # Protocolo Inteligente
 
-## Executar Localmente
+Aplicativo de Gestão de Portaria com IA — Angular 21, Firebase, Gemini e Mercado Pago.
 
-**Pré-requisitos:** Node.js 20+
+> **📋 Quer copiar e usar em outro ambiente?** Veja o **[Guia Completo (SETUP.md)](SETUP.md)**
 
-1. Instale as dependências:
-   ```bash
-   npm install --legacy-peer-deps
-   ```
-2. Execute o servidor de desenvolvimento:
-   ```bash
-   npx ng serve
-   ```
+---
+
+## Início Rápido
+
+**Pré-requisitos:** Node.js 20+ ([instalar](https://nodejs.org))
+
+```bash
+# 1. Clonar
+git clone https://github.com/visaopanoramicaltda-hue/Protocolo-Inteligente-.git
+cd Protocolo-Inteligente-
+
+# 2. Instalar dependências
+npm install --legacy-peer-deps
+
+# 3. Configurar variáveis de ambiente
+cp .env.example .env
+# Edite o .env com suas chaves (Gemini, Mercado Pago)
+
+# 4. Rodar
+npx ng serve
+# → http://localhost:3000
+```
 
 ---
 
@@ -45,3 +59,10 @@ Você precisa configurar **4 Secrets** no GitHub:
 ### URL do App
 
 Após o deploy: `https://FIREBASE_PROJECT_ID.web.app`
+
+---
+
+## 📖 Documentação
+
+- **[SETUP.md](SETUP.md)** — Guia completo para copiar e rodar em outro ambiente (clone, Docker, Firebase, CI/CD)
+- **[BENCHMARKS.md](BENCHMARKS.md)** — Benchmarks de desempenho
