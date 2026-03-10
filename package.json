@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "scripts": {
     "start": "node server.js",
-    "build": "ng build --configuration production"
+    "build": "ng build --configuration production",
+    "build:html": "ng build --configuration production && echo '\n✅ HTML gerado com sucesso na pasta dist/\nCopie todo o conteúdo da pasta dist/ para o seu ambiente de destino.\n'"
   },
   "dependencies": {
     "express": "^4.18.2",
