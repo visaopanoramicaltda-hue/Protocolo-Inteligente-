@@ -406,6 +406,7 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
   public closeScanner(retainTriagemState = false) {
       this.isScannerOpen.set(false);
       this.isProcessingScan.set(false);
+      this.isAutoCapturing.set(false); // CORREÇÃO: reset estado de captura para permitir releitura
       
       this.stopCameraStream(); // GARANTE LIMPEZA DE RECURSOS
       
@@ -599,6 +600,9 @@ export class PackageFormComponent implements AfterViewInit, OnDestroy {
                   destinatarioNome: result.destinatario || d.destinatarioNome,
                   transportadora: result.transportadora || d.transportadora,
                   codigoRastreio: result.rawRastreio || d.codigoRastreio,
+                  // Preenche bloco/apto diretamente do resultado OCR (sem depender de morador cadastrado)
+                  bloco: result.rawBloco || d.bloco,
+                  apto:  result.rawApto  || d.apto,
                   condicaoFisica: (result.condicaoVisual as any) || d.condicaoFisica
               }));
               

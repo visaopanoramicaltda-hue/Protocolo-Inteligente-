@@ -8,6 +8,9 @@ export type ScanStatus = 'valid' | 'invalid' | 'fallback';
 export type ScanResult = {
   destinatario: string;
   transportadora: string;
+  rastreio: string;
+  bloco: string;
+  apto: string;
   confidence: number;
   heatmap: 'green' | 'yellow' | 'red';
   status: ScanStatus;
@@ -21,25 +24,80 @@ const STORAGE = {
   lastSync: 'dataset-last-sync'
 };
 
+// Dataset de transportadoras brasileiras (200+)
 const BASE_TRANSPORTADORAS = [
-  'CORREIOS', 'SEDEX', 'JADLOG', 'LOGGI', 'TOTAL EXPRESS', 'AZUL CARGO', 
-  'MERCADO LIVRE', 'AMAZON', 'SHOPEE', 'MAGALU', 'FEDEX', 'DHL', 'TNT',
-  'BRASPRESS', 'PATRUS', 'DIRECT', 'SEQUOIA', 'RODONAVES'
+  // CORREIOS E SERVIÇOS
+  'CORREIOS', 'SEDEX', 'SEDEX 10', 'SEDEX 12', 'SEDEX HOJE', 'PAC', 'PAC MINI',
+  'E-SEDEX', 'CARTA REGISTRADA', 'ENCOMENDA PAC',
+  // GRANDES OPERADORES NACIONAIS
+  'JADLOG', 'JADLOG .PACKAGE', 'JADLOG .EXPRESSO', 'JADLOG .COM',
+  'LOGGI', 'TOTAL EXPRESS', 'AZUL CARGO', 'AZUL EXPRESSO',
+  'BRASPRESS', 'PATRUS', 'DIRECT EXPRESS', 'SEQUOIA', 'SEQUOIA LOGISTICA',
+  'RODONAVES', 'JAMEF', 'TEGMA', 'JSL LOGISTICA', 'BRINGER', 'LOCALFRIO',
+  'TNT MERCURIO', 'MERCURIO TRANSPORTES', 'RTE', 'RTE EXPRESSO',
+  // E-COMMERCE PLATFORMS
+  'MERCADO LIVRE', 'MERCADO ENVIOS', 'MERCADO ENVIOS FLEX',
+  'AMAZON', 'AMAZON LOGISTICS', 'AMAZON FLEX',
+  'SHOPEE', 'SHOPEE XPRESS',
+  'MAGALU', 'MAGALULOG', 'MAGAZINE LUIZA', 'MAGALU ENTREGAS',
+  'AMERICANAS', 'B2W ENTREGA', 'SHOPTIME', 'SUBMARINO',
+  'CASAS BAHIA', 'VIA VAREJO', 'PONTOFRIO',
+  'ALIEXPRESS', 'CAINIAO', 'SHEIN', 'WISH',
+  // INTERNACIONAIS
+  'FEDEX', 'FEDEX EXPRESSO', 'FEDEX ECONÔMICO',
+  'DHL', 'DHL EXPRESS', 'DHL ECONÔMICO', 'DHL PAKET',
+  'UPS', 'UPS EXPRESS', 'TNT', 'TNT EXPRESSO',
+  // AÉREOS
+  'LATAM CARGO', 'GOL CARGO', 'TAM CARGO', 'AEROCARGO',
+  // APP DELIVERY / LAST MILE
+  'RAPPI', 'IFOOD', 'UBER FLASH', 'LALAMOVE', 'LOGGI URBANO',
+  'DELIVERY DIRETO', 'ENTREGA FACIL', 'MOTOBOY',
+  // PLATAFORMAS TECH
+  'MELHOR ENVIO', 'FRENET', 'KANGU', 'PEGAKI', 'INTELIPOST',
+  'FLEX EXPRESS', 'NUVEM ENVIOS', 'EASYLOG', 'OMNILOG',
+  // LOJAS / MARKETPLACE
+  'RENNER ENTREGA', 'CENTAURO DELIVERY', 'ZATTINI', 'DAFITI',
+  'NETSHOES', 'RIACHUELO', 'CEA ENTREGA', 'HERING ENTREGA',
+  'KABUM', 'PICHAU', 'TERABYTE',
+  'LEROY MERLIN', 'TOK STOK', 'IKEA', 'MADEIRAMADEIRA',
+  'CARREFOUR', 'ATACADAO', 'ASSAI', 'ULTRAFARMA',
+  // REGIONAIS E OUTROS
+  'EXPRESSO ARAXÁ', 'EXPRESSO JUNDIAI', 'EXPRESSO NORDESTE',
+  'RAPIDO MERCANTIL', 'GIRO LOGISTICA', 'BRLOG', 'LOGSUL',
+  'LOG EXPRESSO', 'SPEEDLOG', 'FASTLOG', 'DROLOG', 'SKY EXPRESS',
+  'LUFT LOGISTICS', 'SDC LOGISTICA', 'TRANS RODONORTE',
+  'NORDESTAO LOGISTICA', 'CATLOG', 'SOLISTICA', 'GOLOG',
+  'COMETA LOGISTICA', 'CONECTA LOG', 'JET ENTREGA',
+  'B&M LOGISTICA', 'EXATA LOGISTICA', 'NUTRANS', 'PLENOBRAS',
+  'DIRECIONAL LOGISTICA', 'LEVE LOGISTICA', 'ENVIAAQUI',
+  'ENVIAREI', 'MINIENVIOS', 'FRETEBRAS', 'FRETEMAIS',
+  'TRANSPORTANDO', 'DESPACHA', 'TRANS MAZZA',
+  'ITAMARATI NORTE', 'ARCO IRIS TRANSPORTES', 'TRANS NB',
+  'EXPRESSO MARINGA', 'EXPRESSO ARAÇATUBA', 'TRANS EXPRESSO SUL',
+  'CLICKPOST', 'DROGA RAIA', 'DROGASIL',
 ];
 
 // --- PROTOCOLO DE IMUNIDADE (BLACKLIST IMUTÁVEL) ---
 const IMMUTABLE_IGNORE_LIST = [
-    'RUA', 'AV.', 'AVENIDA', 'ALAMEDA', 'TRAVESSA', 'RODOVIA', 'ESTRADA', // Endereços
-    'CEP', 'BAIRRO', 'CIDADE', 'ESTADO', 'UF', 'BRASIL', // Localização Genérica
-    'PEDIDO', 'ORDER', 'NOTA', 'FISCAL', 'DANFE', 'CNPJ', 'CPF', 'INSCRICAO', // Documentos Fiscais
-    'VOLUME', 'PESO', 'KG', 'GRAMAS', 'LITROS', // Metadados Físicos
-    'SMS1', 'SMS2', 'SMS', // Lixo de Impressoras Térmicas
-    'REMETENTE', 'DESTINATARIO', 'A/C', // Rótulos
-    'SERIE', 'LOTE', 'VALIDADE', 'FABRICACAO', // Dados de Produto
-    'FONE', 'TEL', 'CEL', 'CONTATO', // Contatos
-    'WWW', 'HTTP', '.COM', '.BR', // URLs
-    'FRAGIL', 'CUIDADO', 'VIDRO' // Avisos
+    'RUA', 'AV.', 'AVENIDA', 'ALAMEDA', 'TRAVESSA', 'RODOVIA', 'ESTRADA',
+    'CEP', 'BAIRRO', 'CIDADE', 'ESTADO', 'UF', 'BRASIL',
+    'PEDIDO', 'ORDER', 'NOTA', 'FISCAL', 'DANFE', 'CNPJ', 'CPF', 'INSCRICAO',
+    'VOLUME', 'PESO', 'KG', 'GRAMAS', 'LITROS',
+    'SMS1', 'SMS2', 'SMS',
+    'REMETENTE', 'DESTINATARIO', 'A/C',
+    'SERIE', 'LOTE', 'VALIDADE', 'FABRICACAO',
+    'FONE', 'TEL', 'CEL', 'CONTATO',
+    'WWW', 'HTTP', '.COM', '.BR',
+    'FRAGIL', 'CUIDADO', 'VIDRO'
 ];
+
+// Regex patterns para extração estruturada
+const TRACKING_REGEX    = /\b([A-Z]{2}\d{9}[A-Z]{2}|\d{10,14})\b/;
+const BLOCO_REGEX       = /\b(?:BL(?:O(?:CO?)?)?\s*[:\-]?\s*)([A-Z0-9]{1,4})\b/i;
+const APTO_REGEX        = /\b(?:AP(?:T?O?)?\s*[:\-]?\s*|APART(?:AMENTO)?\s*[:\-]?\s*|UNIDADE\s*[:\-]?\s*)([A-Z0-9]{1,6})\b/i;
+
+// Blacklist adicional para dimensões/medidas
+const DIMENSIONS_REGEX  = /\d+\s*[Xx×]\s*\d+/;  // ex: 20x15, 30X20X15
 
 @Injectable({
   providedIn: 'root'
@@ -137,62 +195,81 @@ export class ExclusiveScannerService {
      EXTRAÇÃO + CORREÇÃO (TITANIUM SHIELD)
      ========================== */
   private extract(text: string) {
-    if (!text) return { destinatario: '', transportadora: '' };
+    if (!text) return { destinatario: '', transportadora: '', rastreio: '', bloco: '', apto: '' };
 
+    const upperText = text.toUpperCase();
+
+    // --- FASE 1: EXTRAÇÃO POR REGEX (CAMPOS ESTRUTURADOS) ---
+
+    // Código de rastreio
+    let rastreio = '';
+    const trackingMatch = upperText.match(TRACKING_REGEX);
+    if (trackingMatch) rastreio = trackingMatch[1];
+
+    // Bloco
+    let bloco = '';
+    const blocoMatch = upperText.match(BLOCO_REGEX);
+    if (blocoMatch) bloco = blocoMatch[1].trim();
+
+    // Apartamento
+    let apto = '';
+    const aptoMatch = upperText.match(APTO_REGEX);
+    if (aptoMatch) apto = aptoMatch[1].trim();
+
+    // --- FASE 2: EXTRAÇÃO DE TRANSPORTADORA E DESTINATÁRIO ---
     const rawLines = text.split('\n');
     const validLines: string[] = [];
 
-    // --- FASE 1: FILTRAGEM AGRESSIVA (IMUNIDADE) ---
     for (const rawLine of rawLines) {
         const line = rawLine.trim().toUpperCase();
         if (line.length < 3) continue;
-
-        // Se a linha contiver QUALQUER termo da Blacklist, ela morre aqui.
         const isToxic = IMMUTABLE_IGNORE_LIST.some(badTerm => line.includes(badTerm));
-        if (!isToxic) {
-            validLines.push(line);
-        }
+        // Permite linhas com tracking (para não suprimir a linha de rastreio)
+        if (!isToxic) validLines.push(line);
     }
 
     const learnedT = this.load(STORAGE.transportadoras);
-    const allCarriers = [...BASE_TRANSPORTADORAS, ...learnedT];
+    // Ordena por comprimento DECRESCENTE: match mais longo primeiro (evita "PAC" em "JADLOG .PACKAGE")
+    const allCarriers = [...BASE_TRANSPORTADORAS, ...learnedT].sort((a, b) => b.length - a.length);
 
     let destinatario = '';
     let transportadora = '';
 
     for (const l of validLines) {
-      // 1. EXTRAÇÃO DE DESTINATÁRIO
+      // Extração de transportadora por lookup (longest-match first)
+      if (!transportadora) {
+          for (const t of allCarriers) {
+            if (l.includes(t)) { transportadora = t; break; }
+          }
+      }
+
+      // Extração de destinatário: exclui linhas de transportadora, endereço e dimensões
       if (!destinatario) {
-          // Heurística secundária: Linha isolada que sobreviveu à purga
-          // Se não tem números (evita códigos) e é longa o suficiente
-          if (l.length > 5 && l.length < 40 && !/\d/.test(l)) { 
-             if (l.split(' ').length >= 2) {
-                 destinatario = l;
+          const isCarrier    = allCarriers.some(t => l.includes(t));
+          const isAddress    = IMMUTABLE_IGNORE_LIST.some(bad => l.includes(bad));
+          const isDimensions = /\d+\s*[Xx×]\s*\d+/.test(l);
+          if (!isCarrier && !isAddress && !isDimensions && l.length > 5 && l.length < 60 && !/\d{3,}/.test(l)) {
+             const words = l.trim().split(/\s+/);
+             if (words.length >= 2 && words.every(w => w.length >= 2)) {
+                 destinatario = l.trim();
              }
           }
       }
 
-      // 2. EXTRAÇÃO DE TRANSPORTADORA
-      if (!transportadora) {
-          for (const t of allCarriers) {
-            if (l.includes(t)) {
-              transportadora = t;
-              break;
-            }
-          }
-      }
+      if (destinatario && transportadora) break;
     }
 
-    return { destinatario, transportadora };
+    return { destinatario, transportadora, rastreio, bloco, apto };
   }
 
   /* ==========================
      SCORE + HEATMAP
      ========================== */
-  private confidence(data: { destinatario: string; transportadora: string }) {
+  private confidence(data: { destinatario: string; transportadora: string; rastreio: string }) {
     let c = 0;
-    if (data.destinatario.length >= 6) c += 40;
-    if (data.transportadora) c += 40;
+    if (data.destinatario.length >= 6) c += 30;
+    if (data.transportadora) c += 30;
+    if (data.rastreio) c += 20;
     
     const learnedResidents = this.load(STORAGE.moradores);
     if (learnedResidents.some(r => data.destinatario.includes(r) || r.includes(data.destinatario))) c += 20;
@@ -228,9 +305,9 @@ export class ExclusiveScannerService {
           if (text === 'TIMEOUT') console.warn('[ExclusiveScanner] Tempo limite de leitura excedido.');
           
           return {
-              destinatario: '', transportadora: '', confidence: 0,
-              heatmap: 'red', status: 'invalid', timeMs: performance.now() - start,
-              rawText: ''
+              destinatario: '', transportadora: '', rastreio: '', bloco: '', apto: '',
+              confidence: 0, heatmap: 'red', status: 'invalid',
+              timeMs: performance.now() - start, rawText: ''
           };
       }
 
@@ -244,8 +321,12 @@ export class ExclusiveScannerService {
       }
 
       return {
-        ...extracted,
-        confidence: score,
+        destinatario:  extracted.destinatario,
+        transportadora: extracted.transportadora,
+        rastreio:      extracted.rastreio,
+        bloco:         extracted.bloco,
+        apto:          extracted.apto,
+        confidence:    score,
         heatmap,
         status: score >= 75 ? 'valid' : score >= 40 ? 'fallback' : 'invalid',
         timeMs: performance.now() - start,
@@ -255,9 +336,9 @@ export class ExclusiveScannerService {
     } catch (e) {
       console.error('[ExclusiveScanner] Falha no processamento:', e);
       return {
-          destinatario: '', transportadora: '', confidence: 0, 
-          heatmap: 'red', status: 'invalid', timeMs: performance.now() - start,
-          rawText: ''
+          destinatario: '', transportadora: '', rastreio: '', bloco: '', apto: '',
+          confidence: 0, heatmap: 'red', status: 'invalid',
+          timeMs: performance.now() - start, rawText: ''
       };
     }
   }

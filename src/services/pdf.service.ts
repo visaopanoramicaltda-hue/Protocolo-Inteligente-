@@ -508,8 +508,220 @@ export class PdfService {
   public async generateDailyOperationalReport(stats: any, dateStr: string): Promise<{ blob: Blob, url: string }> { return { blob: new Blob(), url: '' }; }
   public async generateInvoice(plano: string, valor: string, cliente: string, cpf: string, condominio: string, nsu: string): Promise<{ blob: Blob, url: string, hash: string }> { return { blob: new Blob(), url: '', hash: '' }; }
   public async generateBatchEntryReceipt(items: Encomenda[], porteiro: Porteiro, courierName: string, signatureBase64: string): Promise<{ blob: Blob, url: string, hash: string }> { return { blob: new Blob(), url: '', hash: '' }; }
-  public async generateEncomendasReport(items: Encomenda[], filters: string, user: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> { return { blob: new Blob(), url: '', hash: '' }; }
-  public async generatePorteirosReport(users: Porteiro[], requester: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> { return { blob: new Blob(), url: '', hash: '' }; }
-  public async generateMoradoresReport(residents: Morador[], requester: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> { return { blob: new Blob(), url: '', hash: '' }; }
-  public async generateTransportadorasReport(carriers: string[], requester: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> { return { blob: new Blob(), url: '', hash: '' }; }
+
+  /* =============== RELATÓRIOS OFICIAIS (PDF REAL) =============== */
+
+  private buildReportHeader(doc: jsPDF, titulo: string, subtitulo: string, requesterName: string): void {
+    const PAGE_WIDTH = 210;
+    const MARGIN = 12;
+    doc.setFillColor(this.COLOR_DARK_BG[0], this.COLOR_DARK_BG[1], this.COLOR_DARK_BG[2]);
+    doc.rect(0, 0, PAGE_WIDTH, 28, 'F');
+    doc.setFillColor(this.COLOR_ORANGE[0], this.COLOR_ORANGE[1], this.COLOR_ORANGE[2]);
+    doc.rect(0, 28, PAGE_WIDTH, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('SIMBIOSE', MARGIN, 12);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(200, 200, 200);
+    doc.text('PROTOCOLO INTELIGENTE DE GESTÃO', MARGIN, 18);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text(titulo, PAGE_WIDTH - MARGIN, 11, { align: 'right' });
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(200, 200, 200);
+    doc.text(subtitulo, PAGE_WIDTH - MARGIN, 17, { align: 'right' });
+    doc.text(`Gerado por: ${requesterName} | ${new Date().toLocaleString('pt-BR')}`, PAGE_WIDTH - MARGIN, 23, { align: 'right' });
+  }
+
+  private buildReportFooter(doc: jsPDF, hash: string, id: string): void {
+    const PAGE_WIDTH = 210;
+    const footerY = 287;
+    doc.setFillColor(245, 245, 245);
+    doc.rect(0, footerY - 3, PAGE_WIDTH, 14, 'F');
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(5.5);
+    doc.setTextColor(130, 130, 130);
+    doc.text(`HASH: ${hash} | UUID: ${id} | ${new Date().toISOString()}`, PAGE_WIDTH / 2, footerY + 1, { align: 'center' });
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(60, 60, 60);
+    const config = this.db.appConfig();
+    const footer = config.nomeCondominio?.trim() ? config.nomeCondominio.toUpperCase() : 'SISTEMA SIMBIOSE';
+    doc.text(footer, PAGE_WIDTH / 2, footerY + 7, { align: 'center' });
+  }
+
+  public async generateEncomendasReport(items: Encomenda[], filters: string, user: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> {
+    const doc = new jsPDF();
+    const PAGE_WIDTH = 210;
+    const MARGIN = 12;
+    this.buildReportHeader(doc, 'RELATÓRIO DE ENCOMENDAS', `Filtro: ${filters}`, user.nome);
+
+    let y = 38;
+
+    // Stats bar
+    const pendentes  = items.filter(i => i.status === 'PENDENTE').length;
+    const entregues  = items.filter(i => i.status === 'ENTREGUE').length;
+    const canceladas = items.filter(i => i.status === 'CANCELADA').length;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(40, 40, 40);
+    doc.text(`Total: ${items.length}   Pendentes: ${pendentes}   Entregues: ${entregues}   Canceladas: ${canceladas}`, MARGIN, y);
+    y += 4;
+    doc.setDrawColor(this.COLOR_ORANGE[0], this.COLOR_ORANGE[1], this.COLOR_ORANGE[2]);
+    doc.setLineWidth(0.4); doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y); y += 5;
+
+    // Table header
+    doc.setFillColor(this.COLOR_DARK_BG[0], this.COLOR_DARK_BG[1], this.COLOR_DARK_BG[2]);
+    doc.rect(MARGIN, y, PAGE_WIDTH - MARGIN * 2, 6, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5);
+    doc.text('DATA ENTRADA',  MARGIN + 1,  y + 4);
+    doc.text('DESTINATÁRIO',  MARGIN + 26, y + 4);
+    doc.text('TRANSPORTADORA', MARGIN + 72, y + 4);
+    doc.text('RASTREIO',      MARGIN + 108, y + 4);
+    doc.text('STATUS',        MARGIN + 148, y + 4);
+    y += 7;
+
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5);
+    for (const item of items) {
+      if (y > 276) { doc.addPage(); this.buildReportHeader(doc, 'RELATÓRIO DE ENCOMENDAS (cont.)', `Filtro: ${filters}`, user.nome); y = 38; }
+      const rowBg = item.status === 'ENTREGUE' ? [220, 252, 231] : item.status === 'CANCELADA' ? [254, 226, 226] : [250, 250, 250];
+      doc.setFillColor(rowBg[0], rowBg[1], rowBg[2]);
+      doc.rect(MARGIN, y - 1, PAGE_WIDTH - MARGIN * 2, 5.5, 'F');
+      doc.setTextColor(20, 20, 20);
+      doc.text(new Date(item.dataEntrada).toLocaleDateString('pt-BR'), MARGIN + 1, y + 3);
+      doc.text((item.destinatarioNome || '').substring(0, 24),         MARGIN + 26, y + 3);
+      doc.text((item.transportadora || 'N/A').substring(0, 16),        MARGIN + 72, y + 3);
+      doc.text((item.codigoRastreio || 'N/A').substring(0, 18),        MARGIN + 108, y + 3);
+      doc.text(item.status || '',                                       MARGIN + 148, y + 3);
+      doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.1);
+      doc.line(MARGIN, y + 4.5, PAGE_WIDTH - MARGIN, y + 4.5);
+      y += 5.5;
+    }
+
+    const rawBuffer = doc.output('arraybuffer');
+    const hash = await this.gerarHash(rawBuffer);
+    this.buildReportFooter(doc, hash.substring(0, 32), crypto.randomUUID());
+    const blob = new Blob([doc.output('arraybuffer')], { type: 'application/pdf' });
+    const url  = URL.createObjectURL(blob);
+    return { blob, url, hash };
+  }
+
+  public async generatePorteirosReport(users: Porteiro[], requester: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> {
+    const doc = new jsPDF();
+    const PAGE_WIDTH = 210;
+    const MARGIN = 12;
+    this.buildReportHeader(doc, 'RELATÓRIO DE PORTEIROS', `Total: ${users.length} porteiros`, requester.nome);
+
+    let y = 40;
+    doc.setFillColor(this.COLOR_DARK_BG[0], this.COLOR_DARK_BG[1], this.COLOR_DARK_BG[2]);
+    doc.rect(MARGIN, y, PAGE_WIDTH - MARGIN * 2, 6, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
+    doc.text('NOME',   MARGIN + 2,  y + 4);
+    doc.text('CPF',    MARGIN + 70, y + 4);
+    doc.text('PERFIL', MARGIN + 120, y + 4);
+    y += 8;
+
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(20, 20, 20);
+    for (const u of users) {
+      if (y > 276) { doc.addPage(); y = 20; }
+      doc.setFillColor(250, 250, 250);
+      doc.rect(MARGIN, y - 1, PAGE_WIDTH - MARGIN * 2, 6, 'F');
+      doc.text((u.nome || '').substring(0, 30),              MARGIN + 2,  y + 3.5);
+      doc.text((u.cpf || 'N/A').substring(0, 18),            MARGIN + 70, y + 3.5);
+      doc.text(u.isAdmin ? 'ADMINISTRADOR' : 'PORTEIRO',     MARGIN + 120, y + 3.5);
+      doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.1);
+      doc.line(MARGIN, y + 5, PAGE_WIDTH - MARGIN, y + 5);
+      y += 7;
+    }
+
+    const rawBuffer = doc.output('arraybuffer');
+    const hash = await this.gerarHash(rawBuffer);
+    this.buildReportFooter(doc, hash.substring(0, 32), crypto.randomUUID());
+    const blob = new Blob([doc.output('arraybuffer')], { type: 'application/pdf' });
+    const url  = URL.createObjectURL(blob);
+    return { blob, url, hash };
+  }
+
+  public async generateMoradoresReport(residents: Morador[], requester: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> {
+    const doc = new jsPDF();
+    const PAGE_WIDTH = 210;
+    const MARGIN = 12;
+    this.buildReportHeader(doc, 'RELATÓRIO DE MORADORES', `Total: ${residents.length} moradores`, requester.nome);
+
+    let y = 40;
+    doc.setFillColor(this.COLOR_DARK_BG[0], this.COLOR_DARK_BG[1], this.COLOR_DARK_BG[2]);
+    doc.rect(MARGIN, y, PAGE_WIDTH - MARGIN * 2, 6, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
+    doc.text('NOME',    MARGIN + 2,  y + 4);
+    doc.text('BLOCO',   MARGIN + 90, y + 4);
+    doc.text('UNIDADE', MARGIN + 120, y + 4);
+    doc.text('TELEFONE', MARGIN + 155, y + 4);
+    y += 8;
+
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(20, 20, 20);
+    for (const r of residents) {
+      if (y > 276) { doc.addPage(); y = 20; }
+      if (r.isPrincipal) { doc.setFillColor(255, 251, 235); } else { doc.setFillColor(250, 250, 250); }
+      doc.rect(MARGIN, y - 1, PAGE_WIDTH - MARGIN * 2, 6, 'F');
+      doc.text((r.nome || '').substring(0, 34),     MARGIN + 2,  y + 3.5);
+      doc.text((r.bloco || '-').substring(0, 10),   MARGIN + 90, y + 3.5);
+      doc.text((r.apto  || '-').substring(0, 10),   MARGIN + 120, y + 3.5);
+      doc.text((r.telefone || 'N/A').substring(0, 18), MARGIN + 155, y + 3.5);
+      doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.1);
+      doc.line(MARGIN, y + 5, PAGE_WIDTH - MARGIN, y + 5);
+      y += 7;
+    }
+
+    const rawBuffer = doc.output('arraybuffer');
+    const hash = await this.gerarHash(rawBuffer);
+    this.buildReportFooter(doc, hash.substring(0, 32), crypto.randomUUID());
+    const blob = new Blob([doc.output('arraybuffer')], { type: 'application/pdf' });
+    const url  = URL.createObjectURL(blob);
+    return { blob, url, hash };
+  }
+
+  public async generateTransportadorasReport(carriers: string[], requester: Porteiro): Promise<{ blob: Blob, url: string, hash: string }> {
+    const doc = new jsPDF();
+    const PAGE_WIDTH = 210;
+    const MARGIN = 12;
+    this.buildReportHeader(doc, 'RELATÓRIO DE TRANSPORTADORAS', `Total: ${carriers.length} transportadoras`, requester.nome);
+
+    let y = 40;
+    doc.setFillColor(this.COLOR_DARK_BG[0], this.COLOR_DARK_BG[1], this.COLOR_DARK_BG[2]);
+    doc.rect(MARGIN, y, PAGE_WIDTH - MARGIN * 2, 6, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
+    doc.text('#',           MARGIN + 2,  y + 4);
+    doc.text('TRANSPORTADORA', MARGIN + 14, y + 4);
+    y += 8;
+
+    const cols = 2;
+    const colW  = (PAGE_WIDTH - MARGIN * 2) / cols;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(20, 20, 20);
+    for (let i = 0; i < carriers.length; i++) {
+      if (y > 276) { doc.addPage(); y = 20; }
+      const col = i % cols;
+      const xOff = MARGIN + col * colW;
+      if (col === 0) {
+        if (i % 4 === 0) { doc.setFillColor(240, 240, 240); } else { doc.setFillColor(250, 250, 250); }
+        doc.rect(MARGIN, y - 1, PAGE_WIDTH - MARGIN * 2, 5.5, 'F');
+      }
+      doc.text(`${i + 1}.`, xOff + 2, y + 3);
+      doc.text((carriers[i] || '').substring(0, 30), xOff + 12, y + 3);
+      if (col === cols - 1) {
+        doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.1);
+        doc.line(MARGIN, y + 4.5, PAGE_WIDTH - MARGIN, y + 4.5);
+        y += 5.5;
+      }
+    }
+    if (carriers.length % cols !== 0 && (carriers.length - 1) % cols === 0) y += 5.5;
+
+    const rawBuffer = doc.output('arraybuffer');
+    const hash = await this.gerarHash(rawBuffer);
+    this.buildReportFooter(doc, hash.substring(0, 32), crypto.randomUUID());
+    const blob = new Blob([doc.output('arraybuffer')], { type: 'application/pdf' });
+    const url  = URL.createObjectURL(blob);
+    return { blob, url, hash };
+  }
 }

@@ -26,23 +26,25 @@ export interface ImageQualityData {
 
 export interface OcrExtractionResult {
   destinatario: string;
-  localizacao: string; 
+  localizacao: string;
+  rawBloco: string;    // bloco extraído diretamente da etiqueta
+  rawApto: string;     // apartamento extraído diretamente da etiqueta
   transportadora: string;
   confianca: number;
   rawRastreio?: string;
   isBlurry?: boolean;
   isEmpty?: boolean;
   textDensity?: number;
-  isTurbo?: boolean; 
+  isTurbo?: boolean;
   condicaoVisual?: string;
   destinatarioConfidence?: number;
   localizacaoConfidence?: number;
   transportadoraConfidence?: number;
   rastreioConfidence?: number;
-  privacyBlocked?: boolean; 
+  privacyBlocked?: boolean;
   // Identificação Lógica
-  matchedMoradorId?: string; // ID do morador encontrado via lógica
-  wasAutoCorrected?: boolean; // Flag se houve correção automática
+  matchedMoradorId?: string;
+  wasAutoCorrected?: boolean;
 }
 
 interface OcrCacheEntry {
@@ -254,7 +256,11 @@ export class GeminiService {
   // --- CORE LOGIC: TRIANGULAÇÃO SNIPER STRICT ---
   private resolveIdentityLogic(raw: OcrExtractionResult, moradores: Morador[]): OcrExtractionResult {
       let finalResult = { ...raw };
-      
+
+      // Garante que rawBloco/rawApto estão sempre presentes no resultado
+      if (!finalResult.rawBloco) finalResult.rawBloco = '';
+      if (!finalResult.rawApto)  finalResult.rawApto  = '';
+
       // Normalização inicial
       const rawName = this.normalizeString(raw.destinatario);
       
@@ -268,19 +274,31 @@ export class GeminiService {
               finalResult.destinatario = resident.nome;
               finalResult.matchedMoradorId = resident.id;
               finalResult.wasAutoCorrected = true;
+              // Mantém bloco/apto do morador cadastrado como referência
+              if (!finalResult.rawBloco) finalResult.rawBloco = resident.bloco || '';
+              if (!finalResult.rawApto)  finalResult.rawApto  = resident.apto  || '';
               return finalResult;
           }
       }
 
       // 2. TRIANGULAÇÃO DE BLOCO/APTO COM GUARD RAIL EXTREMO (MODO SNIPER)
-      const locationData = this.parseLocationString(raw.localizacao) || this.parseLocationString(raw.destinatario);
-      
-      if (locationData) {
-          const { bloco, apto } = locationData;
-          
-          const moradoresDaUnidade = moradores.filter(m => 
-              this.normalizeString(m.bloco) === bloco && 
-              this.normalizeString(m.apto) === apto
+      // Usa rawBloco/rawApto do Gemini primeiro; fallback para parseLocationString
+      const blocoRaw  = raw.rawBloco  || '';
+      const aptoRaw   = raw.rawApto   || '';
+      const localizacaoParsed = (blocoRaw || aptoRaw)
+          ? { bloco: this.normalizeString(blocoRaw), apto: this.normalizeString(aptoRaw) }
+          : (this.parseLocationString(raw.localizacao) || this.parseLocationString(raw.destinatario));
+
+      if (localizacaoParsed) {
+          const { bloco, apto } = localizacaoParsed;
+
+          // Atualiza rawBloco/rawApto se ainda não estavam preenchidos
+          if (!finalResult.rawBloco && bloco) finalResult.rawBloco = bloco;
+          if (!finalResult.rawApto  && apto)  finalResult.rawApto  = apto;
+
+          const moradoresDaUnidade = moradores.filter(m =>
+              this.normalizeString(m.bloco) === bloco &&
+              this.normalizeString(m.apto)  === apto
           );
 
           if (moradoresDaUnidade.length > 0) {
@@ -309,9 +327,6 @@ export class GeminiService {
                   // Se não bateu o nome, MANTÉM O OCR ORIGINAL.
                   // Nunca adivinhe que é o titular se o nome for diferente.
                   console.log('[Logic] Unidade detectada, mas nome distinto. Mantendo original fiel.');
-                  // Preenchemos apenas a unidade para ajudar, mas deixamos o nome intacto.
-                  // Nota: O Form Component já preenche bloco/apto se vier vazio no OCR mas tiver match aqui?
-                  // O parseLocationString já extraiu o bloco/apto do texto, então o form já deve ter recebido no rawResult.
               }
           }
       }
@@ -330,11 +345,13 @@ export class GeminiService {
           }
 
           // SNIPER RULE GLOBAL: Exige 95% de certeza para trocar sem unidade.
-          if (bestGlobalMatch && bestGlobalScore > 0.95) { 
+          if (bestGlobalMatch && bestGlobalScore > 0.95) {
                console.log('[Logic] Match Fuzzy Global (Certeza Absoluta):', bestGlobalMatch.nome);
                finalResult.destinatario = bestGlobalMatch.nome;
                finalResult.matchedMoradorId = bestGlobalMatch.id;
                finalResult.wasAutoCorrected = true;
+               if (!finalResult.rawBloco) finalResult.rawBloco = bestGlobalMatch.bloco || '';
+               if (!finalResult.rawApto)  finalResult.rawApto  = bestGlobalMatch.apto  || '';
           }
       }
 
@@ -428,64 +445,106 @@ export class GeminiService {
   }
 
   private async runCloudGemini(base64: string, moradores: Morador[], carriers: string[], localHints: { qrCode?: string }): Promise<OcrExtractionResult> {
-      const carrierList = carriers.slice(0, 50).join(',');
-      
-      // SNIPER MODE PROMPT REFORÇADO (VERBATIM)
-      const systemInstruction = `
-        JSON ONLY. Extract: destinatario, transportadora, rastro. Condição: Intacta/Violada.
-        List: [${carrierList}]. QR: ${localHints.qrCode || 'N/A'}. 
-        
-        SNIPER PROTOCOL ACTIVATED (STRICT VERBATIM):
-        - EXTRACT TEXT EXACTLY AS PRINTED. DO NOT AUTO-CORRECT.
-        - DO NOT GUESS NAMES. If the label says "Maria", WRITE "Maria", even if you think it should be "Mario".
-        - If the name is blurry/illegible, return EMPTY STRING. DO NOT HALLUCINATE.
-        - IGNORE ADDRESS LINES (Rua, Av, CEP). Focus ONLY on RECIPIENT NAME.
-        
-        PRIVACY PROTOCOL ZERO:
-        - YOU MUST NOT PROCESS HUMAN FACES. If a human face is clearly visible, set 'privacyBlocked' to true.
-        
-        IMMUTABLE RULES:
-        1. BLACKLIST: IGNORE 'RUA', 'AV', 'CEP', 'PEDIDO', 'NOTA', 'FISCAL', 'CNPJ', 'CPF', 'VOLUME'.
-        2. TRACKING: Must be long alphanumeric.
-        3. CARRIER: Look for logos or names from the provided list.
-      `;
-      const prompt = `Analise a etiqueta fielmente. Sem suposições.`;
+      const carrierList = carriers.slice(0, 80).join(', ');
+
+      // PROTOCOLO SIMBIOSE SNIPER — extrai APENAS os 5 campos necessários, descarta o resto
+      const systemInstruction = `SIMBIOSE LABEL SCANNER — PROTOCOLO SNIPER STRICT
+
+Você recebe a imagem de uma etiqueta de envio/entrega. Extraia SOMENTE estes 5 campos:
+
+1. codigoRastreio: O código de rastreio da encomenda.
+   - Formato padrão: 2 letras maiúsculas + 9 dígitos + 2 letras maiúsculas (ex: BR123456789BR, LO987654321BR)
+   - OU: código numérico de 10 a 14 dígitos
+   - Extraia EXATAMENTE como está impresso. Se não encontrar: string vazia.
+
+2. destinatario: O NOME COMPLETO do destinatário, EXATAMENTE como está impresso.
+   - Geralmente aparece após "DESTINATÁRIO:", "PARA:", ou em fonte grande/negrito
+   - É um NOME DE PESSOA ou EMPRESA — NÃO é endereço, NÃO é cidade, NÃO é CEP
+   - NÃO CORRIJA ortografia. NÃO INVENTE. NÃO COMPLETE. Copie caractere por caractere.
+   - Se ilegível ou duvidoso: retorne string vazia.
+
+3. bloco: O identificador do bloco/torre do condomínio.
+   - Procure por: "BL", "BLC", "BLOCO", "TORRE", "PRÉDIO", "EDIFICIO", "EDIF"
+   - Extraia SOMENTE O VALOR (letra ou número), NÃO a palavra-rótulo
+   - Exemplos: "A", "B", "C", "01", "02", "III", "1"
+   - Se não encontrar: string vazia.
+
+4. apartamento: O número do apartamento/unidade.
+   - Procure por: "AP", "APT", "APTO", "APARTAMENTO", "UNIDADE", "UNIT", "SALA", "CASA", "LOJA", "COBERTURA"
+   - Extraia SOMENTE O NÚMERO/CÓDIGO, não a palavra-rótulo
+   - Exemplos: "101", "302", "1502", "A21", "PB"
+   - Se não encontrar: string vazia.
+
+5. transportadora: O nome da transportadora/empresa de logística.
+   - Lista conhecida: ${carrierList}
+   - Se reconhecer: use o nome canônico da lista.
+   - Se não estiver na lista: extraia o que está impresso.
+   - Se não encontrar: string vazia.
+
+REGRAS ABSOLUTAS E IMUTÁVEIS:
+- NUNCA invente, alucine ou "complete" um campo com suposição
+- NUNCA use linhas de endereço (Rua, Av, CEP, Bairro, Cidade, Estado) como destinatario
+- NUNCA use número de pedido como código de rastreio (a menos que bata exatamente com o padrão)
+- Se um campo for ambíguo ou ilegível: retorne string vazia
+- confianca: 0.0 (sem confiança) a 1.0 (certeza). Seja conservador.
+- privacyBlocked: true SOMENTE se um rosto humano for claramente visível na imagem
+- Responda APENAS em JSON. Sem explicações.`;
+
+      const prompt = `Analise esta etiqueta de envio e extraia os campos conforme o protocolo. QR Code detectado: ${localHints.qrCode || 'nenhum'}.`;
 
       const responseSchema: Schema = {
         type: Type.OBJECT,
-        properties: { 
-            destinatario: { type: Type.STRING },
-            localizacao: { type: Type.STRING },
-            transportadora: { type: Type.STRING },
-            rawRastreio: { type: Type.STRING },
-            condicaoVisual: { type: Type.STRING, enum: ["Intacta", "Amassada", "Rasgada", "Violada"] },
-            confianca: { type: Type.NUMBER },
-            privacyBlocked: { type: Type.BOOLEAN, description: "True if human face is detected." }
+        properties: {
+          codigoRastreio: { type: Type.STRING, description: 'Tracking code verbatim' },
+          destinatario:   { type: Type.STRING, description: 'Recipient name verbatim' },
+          bloco:          { type: Type.STRING, description: 'Block/building identifier only' },
+          apartamento:    { type: Type.STRING, description: 'Apartment/unit number only' },
+          transportadora: { type: Type.STRING, description: 'Carrier name' },
+          confianca:      { type: Type.NUMBER, description: 'Confidence 0.0-1.0' },
+          privacyBlocked: { type: Type.BOOLEAN, description: 'True if human face visible' }
         },
-        required: ["destinatario", "transportadora", "confianca"]
+        required: ['destinatario', 'transportadora', 'confianca']
       };
 
-      if (this.geminiApiStatus() !== 'CONFIGURED') throw new Error("No API Key");
+      if (this.geminiApiStatus() !== 'CONFIGURED') throw new Error('No API Key');
 
       const response = await this.genAI.models.generateContent({
-        model: 'gemini-2.5-flash', 
+        model: 'gemini-2.0-flash',
         contents: { parts: [{ inlineData: { mimeType: 'image/jpeg', data: base64 } }, { text: prompt }] },
         config: { systemInstruction, responseMimeType: 'application/json', responseSchema, temperature: 0.0, thinkingConfig: { thinkingBudget: 0 } }
       });
-      
+
       const parsed = JSON.parse(response.text || '{}');
+
+      // Valida formato do código de rastreio (nunca aceita lixo)
+      let rastreio = ((parsed.codigoRastreio as string) || '').trim().toUpperCase().replace(/\s/g, '');
+      const trackingPattern = /^(?:[A-Z]{2}\d{9}[A-Z]{2}|\d{10,14})$/;
+      if (rastreio && !trackingPattern.test(rastreio)) {
+          rastreio = ''; // descarta código inválido
+      }
+
+      const trackingPattern2 = /^(?:[A-Z]{2}\d{9}[A-Z]{2}|\d{10,14})$/;
+      if (localHints.qrCode && trackingPattern2.test(localHints.qrCode.trim().toUpperCase())) {
+          rastreio = localHints.qrCode.trim().toUpperCase();
+      }
+
+      const bloco = ((parsed.bloco as string) || '').trim().toUpperCase();
+      const apartamento = ((parsed.apartamento as string) || '').trim().toUpperCase();
+
       return {
-          destinatario: parsed.destinatario || '',
-          localizacao: parsed.localizacao || '',
-          transportadora: parsed.transportadora || 'LEITURA MANUAL',
-          confianca: parsed.confianca || 0.0,
-          rawRastreio: parsed.rawRastreio,
-          condicaoVisual: parsed.condicaoVisual || 'Intacta',
-          destinatarioConfidence: parsed.destinatario ? (parsed.confianca || 0.8) : 0,
-          localizacaoConfidence: parsed.localizacao ? (parsed.confianca || 0.8) : 0,
-          transportadoraConfidence: parsed.transportadora ? 0.8 : 0,
-          rastreioConfidence: parsed.rawRastreio ? 0.9 : 0,
-          privacyBlocked: parsed.privacyBlocked || false 
+          destinatario:   ((parsed.destinatario as string) || '').trim(),
+          localizacao:    [bloco, apartamento].filter(Boolean).join(' / '),
+          rawBloco:       bloco,
+          rawApto:        apartamento,
+          transportadora: ((parsed.transportadora as string) || '').trim(),
+          confianca:      typeof parsed.confianca === 'number' ? parsed.confianca : 0.0,
+          rawRastreio:    rastreio || undefined,
+          condicaoVisual: 'Intacta',
+          destinatarioConfidence:    parsed.destinatario   ? (parsed.confianca || 0.8) : 0,
+          localizacaoConfidence:     (bloco || apartamento) ? (parsed.confianca || 0.7) : 0,
+          transportadoraConfidence:  parsed.transportadora ? 0.9 : 0,
+          rastreioConfidence:        rastreio ? 0.95 : 0,
+          privacyBlocked:            parsed.privacyBlocked || false
       };
   }
 
@@ -525,7 +584,7 @@ export class GeminiService {
       return Object.entries(this.memory.carrierFrequency).sort(([,a], [,b]) => b - a).slice(0, 15).map(([k]) => k);
   }
 
-  private emptyResult() { return { destinatario: '', localizacao: '', transportadora: 'LEITURA MANUAL', confianca: 0 }; }
+  private emptyResult(): OcrExtractionResult { return { destinatario: '', localizacao: '', rawBloco: '', rawApto: '', transportadora: '', confianca: 0 }; }
   
   private loadOcrCache() {
     try {
