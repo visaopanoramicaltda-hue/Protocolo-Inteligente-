@@ -89,20 +89,20 @@
     
     <!-- TOP BAR -->
     @if (activeTab() !== 'sistema') {
-        <header class="flex items-center justify-between px-8 py-5 border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-20 safe-area-pt safe-area-pr shrink-0 animate-fade-in">
-          <div class="flex items-center gap-4">
-            <button (click)="toggleSidebar()" class="md:hidden text-white p-2 border border-white/10 rounded-md hover:bg-white/10 transition-colors">
+        <header class="flex items-center justify-between px-4 py-3 md:px-8 md:py-5 border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-20 safe-area-pt safe-area-pr shrink-0 animate-fade-in">
+          <div class="flex items-center gap-2 md:gap-4 min-w-0">
+            <button (click)="toggleSidebar()" class="md:hidden text-white p-2 border border-white/10 rounded-md hover:bg-white/10 transition-colors shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
-            <h1 class="text-xl font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 drop-shadow-md">
+            <h1 class="text-sm md:text-xl font-black text-white uppercase tracking-[0.1em] md:tracking-[0.2em] flex items-center gap-2 drop-shadow-md truncate">
                 <span class="text-[#E86C26] hidden md:inline">///</span>
                 Painel de Controle
-                @if(isAssistedMode()){<span class="text-[10px] font-normal border border-white/20 px-2 py-0.5 rounded text-gray-400 tracking-normal">Modo Assistido</span>}
+                @if(isAssistedMode()){<span class="text-[10px] font-normal border border-white/20 px-2 py-0.5 rounded text-gray-400 tracking-normal hidden md:inline">Modo Assistido</span>}
             </h1>
           </div>
           
-          <button (click)="goBackToDashboard()" class="group px-5 py-2 border border-white/10 bg-white/5 rounded-full text-white font-bold uppercase text-[10px] tracking-widest hover:bg-[#E86C26] hover:border-[#E86C26] transition-all shadow-lg flex items-center gap-2 cursor-pointer">
-            <span class="group-hover:-translate-x-1 transition-transform">←</span> Voltar ao Início
+          <button (click)="goBackToDashboard()" class="group px-3 py-2 md:px-5 border border-white/10 bg-white/5 rounded-full text-white font-bold uppercase text-[10px] tracking-widest hover:bg-[#E86C26] hover:border-[#E86C26] transition-all shadow-lg flex items-center gap-1 md:gap-2 cursor-pointer shrink-0">
+            <span class="group-hover:-translate-x-1 transition-transform">←</span> <span class="hidden md:inline">Voltar ao Início</span><span class="md:hidden">Início</span>
           </button>
         </header>
     }
@@ -203,10 +203,10 @@
 
 <!-- INBOX -->
 <ng-template #inboxTab>
-    <div class="flex h-[80vh] bg-black/40 border border-white/10 rounded-xl overflow-hidden backdrop-blur-md">
+    <div class="flex flex-col md:flex-row h-auto md:h-[80vh] bg-black/40 border border-white/10 rounded-xl overflow-hidden backdrop-blur-md">
         <!-- List -->
-        <div class="w-1/3 border-r border-white/10 flex flex-col">
-            <div class="p-4 border-b border-white/10">
+        <div class="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-white/10 flex flex-col max-h-[35vh] md:max-h-full">
+            <div class="p-4 border-b border-white/10 shrink-0">
                 <h3 class="text-sm font-black uppercase tracking-widest text-white">Mensagens</h3>
             </div>
             <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
@@ -225,7 +225,7 @@
             </div>
         </div>
         <!-- Detail -->
-        <div class="w-2/3 flex flex-col bg-[#080808]/50">
+        <div class="w-full md:w-2/3 flex flex-col bg-[#080808]/50 min-h-[200px] md:min-h-0">
             @if(inboxSelection()) {
                 <div class="p-6 border-b border-white/10 flex justify-between items-start">
                     <div>
