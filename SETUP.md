@@ -128,7 +128,8 @@ export const environment = {
 npx ng serve
 ```
 
-O app estará disponível em **http://localhost:3000**
+O app estará disponível em **http://localhost:3000** (porta configurada no
+`angular.json`).
 
 ### Servidor Express (após build)
 
@@ -137,7 +138,8 @@ npm run build
 npm start
 ```
 
-O app estará disponível em **http://localhost:8080**
+O app estará disponível em **http://localhost:8080** (porta do `server.js`,
+usada em produção/Docker).
 
 ---
 
@@ -364,8 +366,9 @@ configuração de produção, se necessário:
 
 ### Erro: Service Worker inválido
 
-O campo `serviceWorker` no `angular.json` deve ser uma string (caminho), não
-booleano:
+No Angular 21, o campo `serviceWorker` no `angular.json` deve ser uma string
+com o caminho do arquivo de configuração (não um booleano `true` como em
+versões anteriores). O projeto já está configurado corretamente:
 
 ```json
 "serviceWorker": "ngsw-config.json"
