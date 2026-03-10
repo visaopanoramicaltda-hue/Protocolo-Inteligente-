@@ -440,15 +440,17 @@ export class DeepSeekService {
           const scanResult = await this.scannerV4.processScan(base64);
           
           return {
-              destinatario: scanResult.destinatario,
+              destinatario:  scanResult.destinatario,
               transportadora: scanResult.transportadora,
-              rawRastreio: localHints.qrCode, // Prioridade QR
-              confianca: scanResult.confidence / 100,
-              localizacao: '', // Tesseract raramente pega isso bem sem regex pesado
-              condicaoVisual: 'Intacta' // Default seguro
+              rawRastreio:   localHints.qrCode || scanResult.rastreio || undefined,
+              rawBloco:      scanResult.bloco || '',
+              rawApto:       scanResult.apto  || '',
+              localizacao:   [scanResult.bloco, scanResult.apto].filter(Boolean).join(' / '),
+              confianca:     scanResult.confidence / 100,
+              condicaoVisual: 'Intacta'
           };
       } catch (e) {
-          return { destinatario: '', transportadora: '', confianca: 0 } as any;
+          return { destinatario: '', transportadora: '', rawBloco: '', rawApto: '', localizacao: '', confianca: 0 } as OcrExtractionResult;
       }
   }
 
