@@ -4,6 +4,52 @@
 
 # Protocolo Inteligente
 
+## 📋 Exportar como HTML (Copiar e Colar)
+
+Existem **3 formas** de obter o HTML pronto para copiar em outro ambiente:
+
+### Opção 1 — Via GitHub (sem instalar nada)
+
+1. Vá em **Actions → Exportar HTML → Run workflow**
+2. Aguarde a execução terminar
+3. Clique no workflow concluído
+4. Baixe o artefato **`protocolo-inteligente-html`**
+5. Descompacte e copie todos os arquivos para o seu ambiente de destino
+
+### Opção 2 — Linha de comando (npm)
+
+```bash
+npm install --legacy-peer-deps
+npm run build:html
+```
+
+Os arquivos HTML ficam na pasta `dist/`. Copie todo o conteúdo para o servidor de destino.
+
+### Opção 3 — Script de exportação
+
+```bash
+chmod +x export-html.sh
+./export-html.sh
+```
+
+### 📁 Como usar os arquivos HTML exportados
+
+1. Copie **todos** os arquivos da pasta `dist/` para o diretório raiz do seu servidor web
+2. Acesse `index.html` pelo navegador (precisa ser servido por um servidor HTTP)
+
+**Testar localmente:**
+```bash
+cd dist
+npx serve .
+# ou
+python3 -m http.server 8080
+```
+
+> **Nota:** Os arquivos precisam ser servidos por um servidor HTTP (Apache, Nginx, etc.).
+> Abrir o `index.html` diretamente pelo navegador (`file://`) não funciona por restrições de segurança dos módulos JavaScript.
+
+---
+
 ## Executar Localmente
 
 **Pré-requisitos:** Node.js 20+

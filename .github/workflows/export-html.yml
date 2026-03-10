@@ -1,0 +1,33 @@
+name: Exportar HTML
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export_html:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Instalar dependências
+        run: npm ci --legacy-peer-deps
+
+      - name: Build Angular (HTML)
+        run: npm run build
+
+      - name: Upload HTML como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: protocolo-inteligente-html
+          path: dist/
+          retention-days: 30
