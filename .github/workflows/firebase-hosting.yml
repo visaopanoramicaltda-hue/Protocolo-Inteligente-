@@ -23,7 +23,7 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Instalar dependências
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: Injetar segredos no ambiente de produção
         run: |
