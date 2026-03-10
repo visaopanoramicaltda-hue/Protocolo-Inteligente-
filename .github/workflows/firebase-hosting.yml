@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 jobs:
   build_and_deploy:
@@ -25,6 +26,24 @@ jobs:
       - name: Instalar dependências
         run: npm ci --legacy-peer-deps
 
+      - name: Validar segredos do Firebase
+        run: |
+          missing=""
+          if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ]; then
+            missing="${missing} FIREBASE_SERVICE_ACCOUNT"
+          fi
+          if [ -z "${{ secrets.FIREBASE_PROJECT_ID }}" ]; then
+            missing="${missing} FIREBASE_PROJECT_ID"
+          fi
+          if [ -n "$missing" ]; then
+            echo "::error::Os seguintes segredos do GitHub não estão configurados:${missing}"
+            echo "Configure-os em Settings > Secrets and variables > Actions."
+            echo "FIREBASE_SERVICE_ACCOUNT deve conter o JSON da chave da conta de serviço do Firebase."
+            echo "FIREBASE_PROJECT_ID deve conter o ID do projeto Firebase."
+            exit 1
+          fi
+          echo "Segredos do Firebase validados com sucesso."
+
       - name: Injetar segredos no ambiente de produção
         run: |
           sed -i "s|geminiApiKey: ''|geminiApiKey: '${{ secrets.GEMINI_API_KEY }}'|" src/environments/environment.prod.ts
@@ -32,6 +51,18 @@ jobs:
 
       - name: Build Angular
         run: npm run build
+
+      - name: Verificar artefatos de build
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "::error::Diretório 'dist' não encontrado após o build."
+            exit 1
+          fi
+          if [ ! -f "dist/index.html" ]; then
+            echo "::error::Arquivo 'dist/index.html' não encontrado. Verifique a configuração do Angular."
+            exit 1
+          fi
+          echo "Artefatos de build verificados com sucesso."
 
       - name: Deploy Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
