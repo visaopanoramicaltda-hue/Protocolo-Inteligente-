@@ -11,6 +11,8 @@
           "/favicon.ico",
           "/index.html",
           "/manifest.webmanifest",
+          "/icon-192x192.png",
+          "/icon-512x512.png",
           "/*.css",
           "/*.js"
         ]
